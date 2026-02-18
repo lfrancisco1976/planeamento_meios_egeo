@@ -7,16 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #fcfcfc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
         .board-container { display: flex; gap: 1rem; padding: 1.5rem; overflow-x: auto; align-items: start; }
-        .driver-card { min-width: 340px; background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; flex-shrink: 0; }
+        .driver-card { min-width: 340px; background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; flex-shrink: 0; overflow: hidden; }
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 2rem; border-radius: 2rem; }
         
-        .service-bubble { background-color: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; transition: all 0.2s; }
-        .service-bubble:hover { background-color: #dbeafe; }
+        .service-bubble { background-color: white; color: #1e40af; border: 1px solid #e2e8f0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .service-bubble:hover { border-color: #3b82f6; background-color: #f0f7ff; }
 
         ::-webkit-scrollbar { height: 6px; }
         ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
@@ -26,7 +26,7 @@
 
     <div id="loader" class="fixed inset-0 bg-white/80 z-[2000] hidden flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-blue-600 mb-2"></div>
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Sincronizando...</p>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">A processar...</p>
     </div>
 
     <div id="modal" class="modal">
@@ -41,8 +41,8 @@
                 <input type="text" id="m-nei" placeholder="Número Encomenda" class="w-full p-3 bg-slate-50 rounded-xl text-xs font-mono border border-slate-200 outline-none">
                 
                 <div class="flex gap-2 pt-4">
-                    <button onclick="closeModal()" class="flex-1 py-3 text-xs font-bold text-slate-400">Cancelar</button>
-                    <button id="btn-save" class="flex-[2] py-3 bg-blue-600 text-white text-xs font-black rounded-xl uppercase tracking-widest">Gravar</button>
+                    <button onclick="closeModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                    <button id="btn-save" class="flex-[2] py-3 bg-slate-900 text-white text-xs font-black rounded-xl uppercase tracking-widest hover:bg-blue-600 transition">Gravar Dados</button>
                 </div>
             </div>
         </div>
@@ -51,20 +51,23 @@
     <header class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50">
         <div class="max-w-[1900px] mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <span class="text-xl">🚛</span>
-                <h1 class="text-lg font-black tracking-tighter text-slate-900">PRO-MAP</h1>
+                <span class="text-2xl">🚛</span>
+                <div>
+                    <h1 class="text-lg font-black tracking-tighter text-slate-900 leading-none">PRO-MAP</h1>
+                    <span class="text-[8px] font-bold uppercase tracking-[0.2em] text-blue-500">Logística</span>
+                </div>
             </div>
             
             <div class="flex items-center gap-3">
-                <button onclick="goToday()" class="px-4 py-2 text-[10px] font-black uppercase bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition">Hoje</button>
+                <button onclick="goToday()" class="px-4 py-2 text-[10px] font-black uppercase bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition">Ir para Hoje</button>
                 <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200">
                     <button onclick="changeWeek(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition text-slate-400">◀</button>
-                    <span id="week-label" class="text-[10px] font-black uppercase tracking-widest min-w-[140px] text-center text-slate-600"></span>
+                    <span id="week-label" class="text-[10px] font-black uppercase tracking-widest min-w-[140px] text-center text-slate-600 font-mono"></span>
                     <button onclick="changeWeek(1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition text-slate-400">▶</button>
                 </div>
             </div>
 
-            <button onclick="loadData()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">
+            <button onclick="loadData()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md shadow-blue-100">
                 Atualizar ↻
             </button>
         </div>
@@ -110,34 +113,40 @@
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
                 col.className = "driver-card";
-                let html = `<div class="p-5 font-black text-center border-b uppercase tracking-tight text-sm text-slate-700">${mot}</div>`;
+                let html = `<div class="p-5 font-black text-center border-b uppercase tracking-tight text-sm text-slate-800 bg-white">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const ds = formatDate(d);
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
+                    
+                    // Lógica de alternância de cores: Dias pares vs ímpares
+                    const isEvenRow = i % 2 === 0;
+                    let rowColor = isEvenRow ? 'bg-white' : 'bg-slate-50/80';
+                    if (isToday) rowColor = 'bg-amber-50'; // Realce para hoje
+
                     const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
 
                     html += `
-                        <div class="p-4 border-b border-slate-50 last:border-0 ${isToday ? 'bg-amber-50/40' : ''}">
+                        <div class="p-4 border-b border-slate-100 last:border-0 ${rowColor}">
                             <div class="flex justify-between items-center mb-3">
-                                <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter ${isToday ? 'bg-amber-200 text-amber-800' : 'bg-slate-100 text-slate-500'}">
-                                    ${ds} ${isToday ? '• Hoje' : ''}
+                                <span class="px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter ${isToday ? 'bg-amber-200 text-amber-900' : 'bg-slate-200 text-slate-500'}">
+                                    ${ds} ${isToday ? '• HOJE' : ''}
                                 </span>
-                                <button onclick="openModal('${mot}', '${ds}')" class="text-slate-300 hover:text-blue-600 font-bold text-xs transition">＋</button>
+                                <button onclick="openModal('${mot}', '${ds}')" class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-blue-100 hover:text-blue-600 text-slate-300 font-bold text-lg transition">＋</button>
                             </div>
                             <div class="space-y-2">
                                 ${services.map(s => `
-                                    <div class="service-bubble p-3 rounded-xl relative group">
+                                    <div class="service-bubble p-3 rounded-xl relative group border-l-4 border-l-blue-500">
                                         <div class="flex justify-between items-start mb-1">
-                                            <span class="text-[8px] font-black opacity-50 uppercase">${s.viatura || ''}</span>
+                                            <span class="text-[8px] font-black opacity-50 uppercase tracking-tight">${s.viatura || ''}</span>
                                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                                <button onclick='openEdit(${JSON.stringify(s)})' class="text-[10px]">✏️</button>
-                                                <button onclick="deleteRow(${s.id})" class="text-[10px]">❌</button>
+                                                <button onclick='openEdit(${JSON.stringify(s)})' class="text-[10px] grayscale hover:grayscale-0">✏️</button>
+                                                <button onclick="deleteRow(${s.id})" class="text-[10px] grayscale hover:grayscale-0">❌</button>
                                             </div>
                                         </div>
-                                        <div class="text-[11px] font-semibold leading-snug">${s.servico}</div>
-                                        ${s.nei && s.nei !== '---' ? `<div class="mt-1 text-[9px] font-mono font-bold opacity-60">${s.nei}</div>` : ''}
+                                        <div class="text-[11px] font-bold leading-tight text-slate-800">${s.servico}</div>
+                                        ${s.nei && s.nei !== '---' ? `<div class="mt-1 text-[9px] font-mono font-bold text-blue-600/70">${s.nei}</div>` : ''}
                                     </div>
                                 `).join('')}
                             </div>
@@ -150,14 +159,14 @@
         function openModal(mot, ds) {
             activeEditData = { motorista: mot, data: ds, action: 'add' };
             resetModalFields();
-            document.getElementById('modal-title').innerText = "Novo Serviço";
+            document.getElementById('modal-title').innerText = "Novo Registo";
             document.getElementById('modal').style.display = 'flex';
         }
 
         function openEdit(s) {
             activeEditData = { ...s, action: 'edit' };
             resetModalFields();
-            document.getElementById('modal-title').innerText = "Editar Serviço";
+            document.getElementById('modal-title').innerText = "Editar Registo";
             if(s.viatura.includes(' / ')) {
                 const parts = s.viatura.split(' / ');
                 document.getElementById('m-trator').value = parts[0].trim();
@@ -180,7 +189,7 @@
 
         async function save() {
             const serv = document.getElementById('m-servico').value;
-            if(!serv.trim()) return alert("Serviço obrigatório.");
+            if(!serv.trim()) return alert("O serviço é obrigatório.");
             
             const payload = {
                 action: activeEditData.action,
@@ -200,7 +209,7 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
         function changeWeek(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
-        async function deleteRow(id) { if(confirm("Apagar?")) { document.getElementById('loader').style.display = 'flex'; await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', id: id}) }); loadData(); } }
+        async function deleteRow(id) { if(confirm("Deseja eliminar este serviço?")) { document.getElementById('loader').style.display = 'flex'; await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', id: id}) }); loadData(); } }
         
         loadData();
     </script>
