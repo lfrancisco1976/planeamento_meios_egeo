@@ -3,60 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logística Pro-Map | Planeamento</title>
+    <title>PRO-MAP | Planeamento de Frota</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loading-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.95);
             z-index: 1000; justify-content: center; align-items: center;
+            flex-direction: column;
         }
-        /* Estilo para a barra de rolagem */
-        ::-webkit-scrollbar { height: 8px; }
+        .driver-column { min-width: 320px; scroll-snap-align: start; }
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans">
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900">
 
-    <div id="loader" class="loading-overlay flex flex-col">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4"></div>
-        <p class="text-slate-700 font-bold animate-pulse">A ler dados do Google Sheets...</p>
+    <div id="loader" class="loading-overlay">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <p class="font-bold text-slate-700 uppercase tracking-widest">Sincronizando com Google Sheets...</p>
     </div>
 
-    <header class="bg-slate-900 text-white shadow-2xl sticky top-0 z-50">
-        <div class="max-w-[1800px] mx-auto p-4 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <span class="text-3xl">🚛</span>
+    <header class="bg-slate-900 text-white shadow-2xl sticky top-0 z-50 border-b border-blue-500/30">
+        <div class="max-w-[1800px] mx-auto p-4 flex flex-wrap justify-between items-center gap-6">
+            <div class="flex items-center gap-4">
+                <span class="text-4xl">🚛</span>
                 <div>
-                    <h1 class="text-xl font-black tracking-tight leading-none">PRO-MAP</h1>
-                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Gestão de Frota</p>
+                    <h1 class="text-2xl font-black tracking-tighter leading-none">PRO-MAP</h1>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-[0.3em]">Logística e Meios</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-4 bg-slate-800 p-1.5 rounded-2xl border border-slate-700 shadow-inner">
-                <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-700 rounded-xl transition-all active:scale-90">◀</button>
-                <div class="flex flex-col items-center min-w-[180px]">
-                    <span id="week-label" class="text-sm font-black text-blue-50"></span>
+            <div class="flex items-center gap-2 bg-slate-800 p-1.5 rounded-2xl border border-slate-700 shadow-inner">
+                <button onclick="changeWeek(-1)" class="p-3 hover:bg-slate-700 rounded-xl transition-all active:scale-95 text-xl">◀</button>
+                <div class="flex flex-col items-center min-w-[220px]">
+                    <span id="week-label" class="text-sm font-black text-blue-50 tracking-wide">A carregar...</span>
                 </div>
-                <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-700 rounded-xl transition-all active:scale-90">▶</button>
+                <button onclick="changeWeek(1)" class="p-3 hover:bg-slate-700 rounded-xl transition-all active:scale-95 text-xl">▶</button>
             </div>
 
-            <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2.5 rounded-xl font-black text-xs transition-all shadow-lg shadow-blue-900/40 active:translate-y-0.5">
-                ATUALIZAR QUADRO ↻
+            <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-black text-xs transition-all shadow-lg shadow-blue-900/40 active:translate-y-0.5 uppercase tracking-widest">
+                Atualizar Dados ↻
             </button>
         </div>
     </header>
 
-    <main id="board" class="p-6 flex gap-6 overflow-x-auto items-start min-h-[calc(100-80px)]">
+    <main id="board" class="p-6 flex gap-6 overflow-x-auto items-start snap-x">
         </main>
 
     <script>
-        // SEU NOVO SCRIPT URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzR18_1Fu0nN0gyo8hi5C0mPhchjx-M3NIfQsr2mEBfPeSyb2zcKydp-cnqqgHcnjMs/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6lUE_0RwUMytBNeaqrlntNzroXZAw2qh2vj-YkJumaw4VxTstxvhbrpMl_Hr7NU3N/exec';
         
         let currentMonday = getMonday(new Date());
         let appData = { motoristas: [], tratores: [], reboques: [], historico: [] };
@@ -72,25 +71,21 @@
             return `${date.getDate()}/${months[date.getMonth()]}`;
         }
 
-        function showLoader(show) {
-            document.getElementById('loader').style.display = show ? 'flex' : 'none';
-        }
-
-        // Normaliza texto para comparação (remove espaços, converte para minúsculas)
-        const normalize = (txt) => String(txt || "").trim().toLowerCase();
+        // Normalização rigorosa para garantir que a comparação não falhe
+        const normalize = (val) => String(val || "").trim().toLowerCase();
 
         async function loadData() {
-            showLoader(true);
+            document.getElementById('loader').style.display = 'flex';
             try {
                 const response = await fetch(SCRIPT_URL);
                 appData = await response.json();
-                console.log("Dados recebidos:", appData); // Para debug
+                console.log("Dados do Histórico:", appData.historico);
                 render();
             } catch (e) {
-                console.error(e);
-                alert("Erro ao comunicar com o Sheets. Verifique se o Script está publicado como 'Anyone'.");
+                console.error("Erro de carregamento:", e);
+                alert("Erro ao ligar ao Sheets. Certifique-se que o script está publicado como 'Anyone'.");
             }
-            showLoader(false);
+            document.getElementById('loader').style.display = 'none';
         }
 
         function changeWeek(direction) {
@@ -107,16 +102,16 @@
             lastDay.setDate(lastDay.getDate() + 6);
             label.innerText = `${formatDate(currentMonday)} a ${formatDate(lastDay)}`;
 
-            if (appData.motoristas.length === 0) {
-                board.innerHTML = `<p class="text-slate-400 text-center w-full mt-20">Nenhum motorista encontrado na folha 'Definicoes'.</p>`;
+            if (!appData.motoristas.length) {
+                board.innerHTML = `<div class="w-full text-center p-20 text-slate-400 font-bold">Aguardando dados da folha 'Definicoes'...</div>`;
                 return;
             }
 
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
-                col.className = "min-w-[340px] bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200 flex-shrink-0 overflow-hidden transition-all hover:shadow-2xl hover:shadow-slate-300/50";
+                col.className = "driver-column bg-white rounded-[2rem] shadow-xl border border-slate-200 flex-shrink-0 overflow-hidden transition-all";
                 
-                let html = `<div class="bg-slate-50 border-b p-5 font-black text-slate-800 text-center uppercase tracking-tighter text-lg">${mot}</div>`;
+                let html = `<div class="bg-slate-100 border-b p-6 font-black text-slate-800 text-center uppercase tracking-tighter text-xl">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday);
@@ -124,26 +119,26 @@
                     const dateStr = formatDate(d);
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
 
-                    // FILTRO CRÍTICO: Compara motorista e data ignorando espaços e maiúsculas
+                    // FILTRO DE DADOS EXISTENTES
                     const savedServices = appData.historico.filter(h => 
                         normalize(h.motorista) === normalize(mot) && 
                         normalize(h.data) === normalize(dateStr)
                     );
 
                     html += `
-                        <div class="p-4 border-b border-slate-50 ${isToday ? 'bg-blue-50/40' : ''}">
+                        <div class="p-4 border-b border-slate-50 ${isToday ? 'bg-blue-50/50' : ''}">
                             <div class="flex justify-between items-center mb-3">
-                                <span class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">${dateStr}</span>
-                                <button onclick="addNewRow('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors shadow-md shadow-slate-200">+ SERVIÇO</button>
+                                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">${dateStr}</span>
+                                <button onclick="addNewRow('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 transition-all">+ NOVO</button>
                             </div>
-                            <div class="space-y-3" id="tasks-${mot}-${i}">
+                            <div class="space-y-3">
                                 ${savedServices.map(s => `
-                                    <div class="bg-white border-l-[6px] border-blue-600 shadow-md p-3 rounded-r-xl border-y border-r border-slate-100 relative group">
-                                        <div class="font-black text-slate-800 text-sm mb-1">${s.viatura}</div>
-                                        <div class="text-slate-600 text-xs font-medium leading-relaxed">${s.servico}</div>
-                                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
-                                            <span class="text-[10px] font-mono font-bold text-blue-600 uppercase">NEI: ${s.nei || '---'}</span>
-                                            <span class="text-[9px] text-slate-300 font-bold uppercase">Sincronizado</span>
+                                    <div class="bg-blue-600 text-white shadow-lg p-3 rounded-2xl relative overflow-hidden group">
+                                        <div class="text-[10px] font-black opacity-60 uppercase mb-1">${s.viatura}</div>
+                                        <div class="text-xs font-bold leading-snug">${s.servico}</div>
+                                        <div class="mt-2 pt-2 border-t border-white/20 flex justify-between items-center">
+                                            <span class="text-[9px] font-mono font-bold italic">NEI: ${s.nei}</span>
+                                            <span class="text-[8px] bg-white/20 px-1.5 py-0.5 rounded">✓</span>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -157,66 +152,55 @@
 
         function addNewRow(mot, dateStr, btn) {
             const container = btn.closest('div').nextElementSibling;
-            if (container.children.length >= 15) return alert("Máximo de 15 serviços por dia.");
-
             const div = document.createElement('div');
-            div.className = "bg-slate-50 p-3 rounded-2xl border-2 border-dashed border-blue-200 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300";
+            div.className = "bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-blue-200 space-y-3 mb-4";
             div.innerHTML = `
                 <div class="flex gap-2">
-                    <select class="w-1/2 text-xs border border-slate-200 p-2 rounded-lg font-bold bg-white" name="t">
-                        <option value="">Trator</option>
-                        ${appData.tratores.map(t => `<option value="${t}">${t}</option>`).join('')}
+                    <select class="w-1/2 text-[11px] border p-2 rounded-lg font-bold" name="t">
+                        <option value="">Trator</option>${appData.tratores.map(t => `<option value="${t}">${t}</option>`).join('')}
                     </select>
-                    <select class="w-1/2 text-xs border border-slate-200 p-2 rounded-lg font-bold bg-white" name="r">
-                        <option value="">Reboque</option>
-                        ${appData.reboques.map(r => `<option value="${r}">${r}</option>`).join('')}
+                    <select class="w-1/2 text-[11px] border p-2 rounded-lg font-bold" name="r">
+                        <option value="">Reboque</option>${appData.reboques.map(r => `<option value="${r}">${r}</option>`).join('')}
                     </select>
                 </div>
-                <input type="text" placeholder="Descrição do serviço..." name="s" class="w-full text-xs border border-slate-200 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                <input type="text" placeholder="Número de Encomenda (NEI)" name="n" class="w-full text-xs border border-slate-200 p-2 rounded-lg font-mono focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                <input type="text" placeholder="Descrição do Serviço" name="s" class="w-full text-xs border p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" placeholder="Nº Encomenda (NEI)" name="n" class="w-full text-xs border p-2 rounded-lg font-mono">
                 <div class="flex gap-2">
-                    <button onclick="save(this, '${mot}', '${dateStr}')" class="flex-1 bg-green-600 text-white text-[11px] py-2 rounded-lg font-black uppercase tracking-wider shadow-lg shadow-green-100 hover:bg-green-700 transition-all">Gravar no Sheets</button>
-                    <button onclick="this.parentElement.parentElement.remove()" class="px-3 text-slate-400 hover:text-red-500 transition-colors">✕</button>
+                    <button onclick="save(this, '${mot}', '${dateStr}')" class="flex-1 bg-green-600 text-white text-xs py-2 rounded-lg font-black uppercase tracking-widest shadow-md">Gravar</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="px-2 text-slate-400 hover:text-red-500">✕</button>
                 </div>
             `;
-            container.appendChild(div);
+            container.prepend(div);
         }
 
         async function save(btn, mot, dateStr) {
             const row = btn.closest('div').parentElement;
-            const trator = row.querySelector('[name="t"]').value;
-            const reboque = row.querySelector('[name="r"]').value;
-            const servico = row.querySelector('[name="s"]').value;
-            const nei = row.querySelector('[name="n"]').value;
-
-            if (!trator || !reboque) return alert("Selecione a viatura (Trator e Reboque)");
+            const t = row.querySelector('[name="t"]').value;
+            const r = row.querySelector('[name="r"]').value;
+            if(!t || !r) return alert("Selecione Trator e Reboque!");
 
             const payload = {
                 data: dateStr,
                 motorista: mot,
-                viatura: `${trator} / ${reboque}`,
-                servico: servico || "Sem descrição",
-                nei: nei || "---"
+                viatura: t + " / " + r,
+                servico: row.querySelector('[name="s"]').value || "S/ Descrição",
+                nei: row.querySelector('[name="n"]').value || "---"
             };
 
             btn.disabled = true;
-            btn.innerHTML = "A enviar...";
+            btn.innerHTML = "A gravar...";
 
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                btn.innerHTML = "✓ Gravado!";
-                btn.className = "flex-1 bg-slate-200 text-slate-500 text-[11px] py-2 rounded-lg font-black cursor-not-allowed uppercase";
-                
-                // Recarrega para validar a leitura
-                setTimeout(loadData, 1500);
+                btn.innerHTML = "Sucesso!";
+                setTimeout(loadData, 1000); // Recarrega para mostrar o serviço na cor azul
             } catch (e) {
-                alert("Erro ao gravar. Verifique a consola do navegador.");
+                alert("Erro ao gravar!");
                 btn.disabled = false;
-                btn.innerHTML = "Gravar no Sheets";
             }
         }
 
-        // Início
+        // Execução Inicial
         loadData();
     </script>
 </body>
