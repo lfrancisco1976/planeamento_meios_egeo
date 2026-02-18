@@ -3,99 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EGEO - TA | Gestão de Frota</title>
+    <title>PRO-MAP | Gestão de Frota</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #ffffff; 
+            background-color: #f1f5f9; /* Fundo mais escuro para os cartões brancos saltarem à vista */
             color: #1e293b;
         }
 
-        /* Container Principal */
         .board-wrapper {
             display: flex;
-            padding: 1rem;
+            padding: 0;
             overflow-x: auto;
-            gap: 0; /* Colunas encostadas para manter o alinhamento visual */
+            gap: 0;
         }
 
         .driver-column {
-            min-width: 400px; /* Largura adaptada para PC */
+            min-width: 450px;
             flex: 1;
-            border-right: 1px solid #f1f5f9;
+            background: white;
+            border-right: 2px solid #e2e8f0;
         }
 
         @media (max-width: 768px) {
-            .driver-column { min-width: 85vw; }
+            .driver-column { min-width: 90vw; }
         }
 
-        /* Célula de Dia - Altura mínima para garantir nivelamento */
+        /* Célula de Dia - Estilo Reforçado */
         .day-cell {
-            min-height: 150px;
-            padding: 1.5rem;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 2rem 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
             display: flex;
             flex-direction: column;
+            position: relative;
+            border-left: 8px solid transparent; /* Barra lateral de destaque */
         }
 
+        /* Cor alternada forte */
+        .bg-alt { background-color: #f1f5f9 !important; border-left-color: #cbd5e1; }
+        .bg-normal { background-color: #ffffff !important; border-left-color: #94a3b8; }
+        .bg-today { background-color: #eff6ff !important; border-left-color: #2563eb; }
+
         .service-bubble {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
             border-radius: 1rem;
             padding: 1rem;
             margin-bottom: 0.75rem;
+            box-shadow: none; /* Mantendo a tua regra de sem sombras */
+        }
+
+        .driver-header {
+            padding: 2rem;
+            background: #1e293b;
+            color: white;
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         /* Scrollbar Minimalista */
-        ::-webkit-scrollbar { height: 8px; }
-        ::-webkit-scrollbar-track { background: #f8fafc; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar { height: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
     </style>
 </head>
 <body>
 
     <div id="loader" class="fixed inset-0 bg-white z-[2000] hidden flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900 mb-2"></div>
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">A carregar...</p>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">A processar...</p>
     </div>
 
-    <header class="border-b border-slate-100 p-6 sticky top-0 bg-white z-50">
+    <header class="bg-white border-b-4 border-slate-200 p-6 sticky top-0 z-[100]">
         <div class="max-w-[2500px] mx-auto flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-4">
-                <span class="text-3xl">🚛</span>
-                <h1 class="text-3xl font-black tracking-tighter">EGEO-TA</h1>
+                <span class="text-4xl">🚛</span>
+                <h1 class="text-4xl font-black tracking-tighter">PRO-MAP</h1>
             </div>
             
             <div class="flex items-center gap-4">
-                <button onclick="goToday()" class="px-6 py-2 text-xs font-bold uppercase border border-slate-200 rounded-lg hover:bg-slate-50">Hoje</button>
-                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl">
-                    <button onclick="changeWeek(-1)" class="text-xl font-bold">◀</button>
-                    <span id="week-label" class="text-sm font-black uppercase tracking-widest font-mono"></span>
-                    <button onclick="changeWeek(1)" class="text-xl font-bold">▶</button>
+                <button onclick="goToday()" class="px-6 py-3 font-black uppercase border-2 border-slate-200 rounded-xl hover:bg-slate-50">Hoje</button>
+                <div class="flex items-center gap-6 bg-slate-900 text-white px-6 py-3 rounded-2xl">
+                    <button onclick="changeWeek(-1)" class="text-2xl font-black">◀</button>
+                    <span id="week-label" class="text-sm font-bold uppercase tracking-widest font-mono"></span>
+                    <button onclick="changeWeek(1)" class="text-2xl font-black">▶</button>
                 </div>
-                <button onclick="loadData()" class="bg-slate-900 text-white px-6 py-3 rounded-lg text-xs font-black uppercase tracking-widest">Atualizar ↻</button>
+                <button onclick="loadData()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition">Atualizar ↻</button>
             </div>
         </div>
     </header>
 
     <main id="board" class="board-wrapper"></main>
 
-    <div id="modal" class="fixed inset-0 bg-slate-900/50 hidden z-[3000] items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md p-8 rounded-3xl">
-            <h2 id="modal-title" class="text-2xl font-black mb-6">Novo Registo</h2>
-            <div class="space-y-4">
-                <div class="flex gap-2">
-                    <select id="m-trator" class="w-1/2 p-4 bg-slate-50 rounded-xl text-sm font-bold outline-none border border-slate-100"></select>
-                    <select id="m-reboque" class="w-1/2 p-4 bg-slate-50 rounded-xl text-sm font-bold outline-none border border-slate-100"></select>
+    <div id="modal" class="fixed inset-0 bg-slate-900/60 hidden z-[3000] items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg p-10 rounded-[2.5rem] border-4 border-slate-900">
+            <h2 id="modal-title" class="text-4xl font-black mb-8 tracking-tighter">Novo Registo</h2>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-1/2">
+                        <label class="text-[10px] font-black uppercase mb-2 block">Trator</label>
+                        <select id="m-trator" class="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-600"></select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="text-[10px] font-black uppercase mb-2 block">Reboque</label>
+                        <select id="m-reboque" class="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-600"></select>
+                    </div>
                 </div>
-                <input type="text" id="m-servico" placeholder="Descrição do Serviço" class="w-full p-4 bg-slate-50 rounded-xl text-base font-bold outline-none border border-slate-100">
-                <input type="text" id="m-nei" placeholder="Número Encomenda" class="w-full p-4 bg-slate-50 rounded-xl text-base font-mono outline-none border border-slate-100">
-                <div class="flex gap-4 pt-4">
-                    <button onclick="closeModal()" class="flex-1 font-bold text-slate-400">Sair</button>
-                    <button id="btn-save" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-xl uppercase tracking-widest">Gravar</button>
+                <div>
+                    <label class="text-[10px] font-black uppercase mb-2 block">Descrição do Serviço</label>
+                    <input type="text" id="m-servico" class="w-full p-5 bg-slate-100 rounded-2xl text-xl font-bold outline-none border-2 border-transparent focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase mb-2 block">Nº Encomenda (NEI)</label>
+                    <input type="text" id="m-nei" class="w-full p-5 bg-slate-100 rounded-2xl text-xl font-mono outline-none border-2 border-transparent focus:border-blue-600">
+                </div>
+                <div class="flex gap-6 pt-6">
+                    <button onclick="closeModal()" class="flex-1 font-black text-slate-400 uppercase tracking-widest">Cancelar</button>
+                    <button id="btn-save" class="flex-[2] py-5 bg-slate-900 text-white font-black rounded-2xl uppercase tracking-[0.2em] hover:bg-blue-600 transition">Gravar</button>
                 </div>
             </div>
         </div>
@@ -105,14 +138,14 @@
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvZ6RDtubzNKAbm0MqyJLVLq6E6x1CdZBtoNhl9OTf3FKImo3lPGdHpSfMoKdr0l-2/exec';
         let currentMonday = getMonday(new Date());
         let appData = { motoristas: [], tratores: [], reboques: [], historico: [] };
-        let activeEditData = null;
+        
+        const weekDays = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+        const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
         function getMonday(d) {
             d = new Date(d); let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
             return new Date(d.setDate(diff));
         }
-
-        function goToday() { currentMonday = getMonday(new Date()); loadData(); }
 
         async function loadData() {
             document.getElementById('loader').classList.remove('hidden');
@@ -127,49 +160,45 @@
         function render() {
             const board = document.getElementById('board');
             board.innerHTML = '';
-            const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-            const formatDate = (date) => `${date.getDate()}/${months[date.getMonth()]}`;
             
+            const formatDate = (date) => `${date.getDate()}/${months[date.getMonth()]}`;
             document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(new Date(new Date(currentMonday).setDate(currentMonday.getDate() + 6)))}`;
 
-            // Primeiro, vamos calcular a altura máxima de cada dia da semana para nivelar
-            let dayHeights = [0, 0, 0, 0, 0, 0, 0];
-            
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
                 col.className = "driver-column";
                 
-                // Header do Motorista (3xl para destaque)
-                let html = `<div class="p-8 font-black text-center border-b border-slate-100 uppercase tracking-tighter text-3xl sticky top-0 bg-white z-20">${mot}</div>`;
+                let html = `<div class="driver-header">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const ds = formatDate(d);
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
                     
-                    const rowColor = i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30';
+                    const rowClass = isToday ? 'bg-today' : (i % 2 === 0 ? 'bg-normal' : 'bg-alt');
                     const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
 
                     html += `
-                        <div class="day-cell ${isToday ? 'bg-amber-50/50' : rowColor}" id="day-${i}-${mot}">
-                            <div class="flex justify-between items-center mb-6">
-                                <span class="text-xl font-black uppercase tracking-tight ${isToday ? 'text-amber-600' : 'text-slate-400'}">
-                                    ${ds} ${isToday ? '• HOJE' : ''}
-                                </span>
-                                <button onclick="openModal('${mot}', '${ds}')" class="text-slate-300 hover:text-slate-900 text-2xl font-bold">＋</button>
+                        <div class="day-cell ${rowClass}" id="day-${i}-${mot.replace(/\s+/g, '')}">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <div class="text-[10px] font-black uppercase tracking-[0.3em] ${isToday ? 'text-blue-600' : 'text-slate-400'}">${weekDays[d.getDay()]}</div>
+                                    <div class="text-3xl font-black ${isToday ? 'text-blue-600' : 'text-slate-900'}">${ds}</div>
+                                </div>
+                                <button onclick="openModal('${mot}', '${ds}')" class="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl font-bold hover:bg-blue-600 transition">＋</button>
                             </div>
                             <div class="flex-grow space-y-3">
                                 ${services.map(s => `
                                     <div class="service-bubble group relative">
                                         <div class="flex justify-between items-start mb-2">
-                                            <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">${s.viatura || ''}</span>
-                                            <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onclick='openEdit(${JSON.stringify(s)})' class="text-sm">✏️</button>
-                                                <button onclick="deleteRow(${s.id})" class="text-sm">❌</button>
+                                            <span class="text-[10px] font-black text-blue-600 uppercase">${s.viatura || ''}</span>
+                                            <div class="flex gap-3">
+                                                <button onclick='openEdit(${JSON.stringify(s)})' class="text-sm grayscale hover:grayscale-0">✏️</button>
+                                                <button onclick="deleteRow(${s.id})" class="text-sm grayscale hover:grayscale-0">❌</button>
                                             </div>
                                         </div>
-                                        <div class="text-sm font-bold leading-tight text-slate-800">${s.servico}</div>
-                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[11px] font-mono text-slate-400 font-bold">${s.nei}</div>` : ''}
+                                        <div class="text-base font-bold leading-tight text-slate-800">${s.servico}</div>
+                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[11px] font-mono text-slate-400 font-bold bg-slate-50 p-1 rounded">NEI: ${s.nei}</div>` : ''}
                                     </div>
                                 `).join('')}
                             </div>
@@ -179,28 +208,28 @@
                 board.appendChild(col);
             });
             
-            // Lógica para equalizar as alturas das células do mesmo dia
-            setTimeout(() => {
-                for (let i = 0; i < 7; i++) {
-                    let maxHeight = 0;
-                    const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);
-                    dayCells.forEach(cell => {
-                        cell.style.height = 'auto'; // Reset
-                        if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
-                    });
-                    dayCells.forEach(cell => {
-                        cell.style.height = maxHeight + 'px';
-                    });
-                }
-            }, 50);
+            setTimeout(equalizeHeights, 50);
         }
 
-        // Funções de Modal e Gravação
+        function equalizeHeights() {
+            for (let i = 0; i < 7; i++) {
+                let maxHeight = 0;
+                const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);
+                dayCells.forEach(cell => {
+                    cell.style.height = 'auto';
+                    if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
+                });
+                dayCells.forEach(cell => cell.style.height = maxHeight + 'px');
+            }
+        }
+
+        // --- Funções de Modal e Gravação ---
         function openModal(mot, ds) {
             activeEditData = { motorista: mot, data: ds, action: 'add' };
             resetModalFields();
             document.getElementById('modal-title').innerText = "Novo Registo";
-            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
         }
 
         function openEdit(s) {
@@ -214,29 +243,26 @@
             }
             document.getElementById('m-servico').value = s.servico;
             document.getElementById('m-nei').value = s.nei === "---" ? "" : s.nei;
-            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
         }
 
         function resetModalFields() {
-            const t = document.getElementById('m-trator');
-            const r = document.getElementById('m-reboque');
-            t.innerHTML = '<option value="">Seleccione Trator</option>' + appData.tratores.map(v => `<option value="${v}">${v}</option>`).join('');
-            r.innerHTML = '<option value="">Seleccione Reboque</option>' + appData.reboques.map(v => `<option value="${v}">${v}</option>`).join('');
+            document.getElementById('m-trator').innerHTML = '<option value="">Trator</option>' + appData.tratores.map(v => `<option value="${v}">${v}</option>`).join('');
+            document.getElementById('m-reboque').innerHTML = '<option value="">Reboque</option>' + appData.reboques.map(v => `<option value="${v}">${v}</option>`).join('');
             document.getElementById('m-servico').value = "";
             document.getElementById('m-nei').value = "";
             document.getElementById('btn-save').onclick = () => save();
         }
 
         async function save() {
-            const serv = document.getElementById('m-servico').value;
-            if(!serv.trim()) return alert("Serviço obrigatório.");
             const payload = {
                 action: activeEditData.action,
                 id: activeEditData.id || null,
                 motorista: activeEditData.motorista,
                 data: activeEditData.data,
                 viatura: document.getElementById('m-trator').value + " / " + document.getElementById('m-reboque').value,
-                servico: serv,
+                servico: document.getElementById('m-servico').value,
                 nei: document.getElementById('m-nei').value || "---"
             };
             document.getElementById('loader').classList.remove('hidden');
@@ -245,7 +271,10 @@
             loadData();
         }
 
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        function closeModal() { 
+            document.getElementById('modal').classList.add('hidden'); 
+            document.getElementById('modal').classList.remove('flex'); 
+        }
         function changeWeek(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
         async function deleteRow(id) { if(confirm("Eliminar registo?")) { document.getElementById('loader').classList.remove('hidden'); await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', id: id}) }); loadData(); } }
         
