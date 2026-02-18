@@ -7,82 +7,60 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
         .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.9);
-            z-index: 1000; justify-content: center; align-items: center;
-            flex-direction: column; color: white;
+            display: none; position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.9); z-index: 1000;
+            flex-direction: column; justify-content: center; align-items: center; color: white;
         }
 
-        /* Estilo para evitar o "charuto" - colunas com largura fixa e scroll suave */
         .board-container {
-            display: flex;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            overflow-x: auto;
-            align-items: start;
-            scroll-behavior: smooth;
+            display: flex; gap: 1.5rem; padding: 1.5rem;
+            overflow-x: auto; align-items: start;
         }
 
         .driver-card {
-            min-width: 380px;
-            max-width: 380px;
-            background: #ffffff;
-            border-radius: 2rem;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            border: 1px solid #e2e8f0;
-            flex-shrink: 0;
+            min-width: 380px; max-width: 380px;
+            background: white; border-radius: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0; flex-shrink: 0;
         }
 
-        .service-bubble {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .service-bubble:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
+        .service-bubble { transition: transform 0.2s; }
+        .service-bubble:hover { transform: scale(1.02); }
 
         ::-webkit-scrollbar { height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body>
 
     <div id="loader" class="loading-overlay">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 mb-4"></div>
-        <p class="font-black uppercase tracking-widest animate-pulse">Sincronizando Frota...</p>
+        <p class="font-black uppercase tracking-widest">Sincronizando Frota...</p>
     </div>
 
-    <header class="bg-slate-900 text-white shadow-2xl sticky top-0 z-50 border-b border-blue-500/30">
-        <div class="max-w-[1900px] mx-auto p-5 flex flex-wrap justify-between items-center gap-4">
+    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50 p-5">
+        <div class="max-w-[1900px] mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <div class="bg-blue-600 p-2 rounded-xl text-2xl">🚛</div>
-                <div>
-                    <h1 class="text-2xl font-black tracking-tighter leading-none">PRO-MAP</h1>
-                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-[0.3em]">Gestão de Meios</p>
-                </div>
+                <h1 class="text-2xl font-black tracking-tighter">PRO-MAP</h1>
             </div>
             
-            <div class="flex items-center gap-4 bg-slate-800 p-2 rounded-2xl border border-slate-700 shadow-inner">
-                <button onclick="changeWeek(-1)" class="w-10 h-10 hover:bg-slate-700 rounded-xl transition flex items-center justify-center font-bold">◀</button>
+            <div class="flex items-center gap-4 bg-slate-800 p-2 rounded-2xl border border-slate-700">
+                <button onclick="changeWeek(-1)" class="w-10 h-10 hover:bg-slate-700 rounded-xl font-bold">◀</button>
                 <span id="week-label" class="text-sm font-black uppercase tracking-widest min-w-[180px] text-center"></span>
-                <button onclick="changeWeek(1)" class="w-10 h-10 hover:bg-slate-700 rounded-xl transition flex items-center justify-center font-bold">▶</button>
+                <button onclick="changeWeek(1)" class="w-10 h-10 hover:bg-slate-700 rounded-xl font-bold">▶</button>
             </div>
 
-            <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-2xl font-black text-xs transition-all shadow-lg active:scale-95 uppercase tracking-widest border-b-4 border-blue-800">
-                Atualizar Quadro
+            <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">
+                Atualizar ↻
             </button>
         </div>
     </header>
 
-    <main id="board" class="board-container">
-        </main>
+    <main id="board" class="board-container"></main>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoHwKatxQVRGRH9EoAPxXcAlJGSPAoZ325skC4o02EufOnuoPFsE8AAAIBDHpvIUIT/exec';
@@ -101,17 +79,13 @@
             return `${date.getDate()}/${months[date.getMonth()]}`;
         }
 
-        const normalize = (val) => String(val || "").trim().toLowerCase();
-
         async function loadData() {
             document.getElementById('loader').style.display = 'flex';
             try {
                 const response = await fetch(SCRIPT_URL);
                 appData = await response.json();
                 render();
-            } catch (e) {
-                alert("Erro de conexão. Verifique a publicação do Script.");
-            }
+            } catch (e) { alert("Erro de rede."); }
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -122,11 +96,8 @@
 
         function render() {
             const board = document.getElementById('board');
-            const label = document.getElementById('week-label');
             board.innerHTML = '';
-            const lastDay = new Date(currentMonday);
-            lastDay.setDate(lastDay.getDate() + 6);
-            label.innerText = `${formatDate(currentMonday)} — ${formatDate(lastDay)}`;
+            document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(new Date(new Date(currentMonday).setDate(currentMonday.getDate() + 6)))}`;
 
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
@@ -134,48 +105,47 @@
                 let html = `<div class="bg-slate-50 border-b p-6 font-black text-slate-800 text-center uppercase tracking-tighter text-xl rounded-t-[2rem]">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
-                    const d = new Date(currentMonday);
-                    d.setDate(d.getDate() + i);
+                    const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const dateStr = formatDate(d);
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
-
-                    const services = appData.historico.filter(h => normalize(h.motorista) === normalize(mot) && normalize(h.data) === normalize(dateStr));
+                    const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data.trim().toLowerCase() === dateStr.toLowerCase());
 
                     html += `
                         <div class="p-5 border-b border-slate-50 last:border-0 ${isToday ? 'bg-blue-50/50' : ''}">
                             <div class="flex justify-between items-center mb-4">
                                 <span class="text-[12px] font-black text-slate-400 uppercase tracking-widest">${dateStr}</span>
-                                <button onclick="openForm('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow-sm">+ NOVO</button>
+                                <button onclick="openForm('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded-xl hover:bg-blue-600 shadow-sm">+ NOVO</button>
                             </div>
                             <div class="space-y-4">
                                 ${services.map(s => `
                                     <div class="service-bubble bg-blue-600 text-white p-4 rounded-[1.5rem] relative border-b-4 border-blue-800 shadow-md">
                                         <div class="flex justify-between items-start mb-2">
                                             <div class="text-[10px] font-black opacity-70 uppercase tracking-wider">${s.viatura || 'Sem Viatura'}</div>
-                                            <div class="flex gap-3 bg-blue-700/50 px-2 py-1 rounded-lg">
-                                                <button onclick='editService(${JSON.stringify(s)}, this)' class="text-[14px] hover:scale-125 transition">✏️</button>
+                                            <div class="flex gap-3">
+                                                <button onclick="triggerEdit(${s.id}, this)" class="text-[14px] hover:scale-125 transition">✏️</button>
                                                 <button onclick="deleteRow(${s.id})" class="text-[14px] hover:scale-125 transition">❌</button>
                                             </div>
                                         </div>
                                         <div class="text-[13px] font-bold leading-relaxed mb-3">${s.servico}</div>
-                                        <div class="flex justify-between items-center pt-2 border-t border-white/20">
-                                            <span class="text-[10px] font-mono font-bold bg-white/20 px-2 py-1 rounded-md">NEI: ${s.nei || '---'}</span>
-                                        </div>
+                                        <div class="text-[10px] font-mono font-bold bg-white/20 px-2 py-1 rounded-md inline-block">NEI: ${s.nei || '---'}</div>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>`;
                 }
-                col.innerHTML = html;
-                board.appendChild(col);
+                col.innerHTML = html; board.appendChild(col);
             });
         }
 
-        // Função para abrir o formulário (Novo ou Editar)
+        // Função de Edição Blindada
+        function triggerEdit(id, btn) {
+            const item = appData.historico.find(h => h.id == id);
+            if (!item) return;
+            openForm(item.motorista, item.data, btn, item);
+        }
+
         function openForm(mot, dateStr, btn, existing = null) {
-            const container = btn.closest('div').nextElementSibling;
-            
-            // Remove qualquer outro form aberto nesta célula para não acumular
+            const container = btn.closest('div').nextElementSibling || btn.closest('.service-bubble').parentElement;
             const existingForm = container.querySelector('.edit-form');
             if (existingForm) existingForm.remove();
 
@@ -188,73 +158,49 @@
             }
 
             div.innerHTML = `
-                <p class="text-[10px] font-black uppercase text-blue-600">${existing ? 'Editar Serviço' : 'Novo Serviço'}</p>
+                <p class="text-[10px] font-black uppercase text-blue-600">${existing ? 'Editar' : 'Novo'}</p>
                 <div class="flex gap-2">
-                    <select class="w-1/2 text-xs border-0 p-3 rounded-xl font-bold bg-white shadow-sm" id="trator">
-                        <option value="">Trator</option>
-                        ${appData.tratores.map(t => `<option value="${t}" ${normalize(t) === normalize(tVal) ? 'selected' : ''}>${t}</option>`).join('')}
+                    <select class="w-1/2 text-xs p-3 rounded-xl font-bold border-0 shadow-sm" id="trator">
+                        <option value="">Trator</option>${appData.tratores.map(t => `<option value="${t}" ${t == tVal ? 'selected' : ''}>${t}</option>`).join('')}
                     </select>
-                    <select class="w-1/2 text-xs border-0 p-3 rounded-xl font-bold bg-white shadow-sm" id="reboque">
-                        <option value="">Reboque</option>
-                        ${appData.reboques.map(r => `<option value="${r}" ${normalize(r) === normalize(rVal) ? 'selected' : ''}>${r}</option>`).join('')}
+                    <select class="w-1/2 text-xs p-3 rounded-xl font-bold border-0 shadow-sm" id="reboque">
+                        <option value="">Reboque</option>${appData.reboques.map(r => `<option value="${r}" ${r == rVal ? 'selected' : ''}>${r}</option>`).join('')}
                     </select>
                 </div>
-                <input type="text" placeholder="Serviço (Obrigatório)" id="servico" value="${existing ? existing.servico : ''}" class="w-full text-xs border-0 p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-bold">
-                <input type="text" placeholder="Número NEI" id="nei" value="${existing ? existing.nei : ''}" class="w-full text-xs border-0 p-3 rounded-xl shadow-sm font-mono outline-none">
-                <div class="flex gap-2 pt-1">
-                    <button onclick="processSave(this, '${mot}', '${dateStr}', ${existing ? existing.id : null})" class="flex-1 bg-green-600 text-white text-[11px] py-3 rounded-xl font-black uppercase tracking-widest shadow-md">
-                        ${existing ? 'Atualizar' : 'Confirmar'}
-                    </button>
-                    <button onclick="this.parentElement.parentElement.remove()" class="px-4 bg-white text-slate-400 rounded-xl shadow-sm hover:text-red-500">✕</button>
+                <input type="text" placeholder="Serviço (Obrigatório)" id="servico" value="${existing ? existing.servico : ''}" class="w-full text-xs p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                <input type="text" placeholder="Número NEI" id="nei" value="${existing ? existing.nei : ''}" class="w-full text-xs p-3 rounded-xl shadow-sm font-mono outline-none">
+                <div class="flex gap-2">
+                    <button onclick="processSave(this, '${mot}', '${dateStr}', ${existing ? existing.id : null})" class="flex-1 bg-green-600 text-white text-[11px] py-3 rounded-xl font-black uppercase shadow-md">GRAVAR</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="px-4 bg-white text-slate-400 rounded-xl">✕</button>
                 </div>
             `;
             container.prepend(div);
-            div.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function editService(s, btn) {
-            // "s" já vem como objeto JSON
-            openForm(s.motorista, s.data, btn, s);
         }
 
         async function processSave(btn, mot, dateStr, editId) {
             const form = btn.closest('.edit-form');
             const servico = form.querySelector('#servico').value;
-            
-            if(!servico.trim()) {
-                alert("O campo Serviço é obrigatório!");
-                return;
-            }
-
-            const t = form.querySelector('#trator').value;
-            const r = form.querySelector('#reboque').value;
-            const viatura = (t || r) ? `${t} / ${r}` : "";
+            if(!servico.trim()) return alert("Serviço obrigatório!");
 
             const payload = {
                 action: editId ? "edit" : "add",
                 id: editId,
                 data: dateStr,
                 motorista: mot,
-                viatura: viatura,
+                viatura: (form.querySelector('#trator').value || form.querySelector('#reboque').value) ? `${form.querySelector('#trator').value} / ${form.querySelector('#reboque').value}` : "",
                 servico: servico,
                 nei: form.querySelector('#nei').value || ""
             };
 
             btn.disabled = true;
-            btn.innerText = "A GUARDAR...";
-
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 await loadData();
-            } catch (e) {
-                alert("Erro ao comunicar com o Sheets.");
-                btn.disabled = false;
-                btn.innerText = "Tentar Novamente";
-            }
+            } catch (e) { alert("Erro ao guardar."); btn.disabled = false; }
         }
 
         async function deleteRow(id) {
-            if(!confirm("Deseja apagar este serviço?")) return;
+            if(!confirm("Apagar serviço?")) return;
             document.getElementById('loader').style.display = 'flex';
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", id: id}) });
             await loadData();
