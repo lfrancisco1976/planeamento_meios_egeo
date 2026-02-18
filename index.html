@@ -3,56 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRO-MAP | Gestão de Logística</title>
+    <title>PRO-MAP | Logística Avançada</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
         .loading-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.95);
+            background: rgba(15, 23, 42, 0.9);
             z-index: 1000; justify-content: center; align-items: center;
-            flex-direction: column;
+            flex-direction: column; color: white;
         }
-        .driver-column { min-width: 350px; scroll-snap-align: start; }
-        ::-webkit-scrollbar { height: 10px; }
+
+        /* Estilo para evitar o "charuto" - colunas com largura fixa e scroll suave */
+        .board-container {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            overflow-x: auto;
+            align-items: start;
+            scroll-behavior: smooth;
+        }
+
+        .driver-card {
+            min-width: 380px;
+            max-width: 380px;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            border: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .service-bubble {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .service-bubble:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        ::-webkit-scrollbar { height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans text-slate-900">
+<body class="bg-slate-50 min-h-screen">
 
     <div id="loader" class="loading-overlay">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4"></div>
-        <p class="font-bold text-slate-700 uppercase tracking-widest text-xs">Sincronizando dados...</p>
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 mb-4"></div>
+        <p class="font-black uppercase tracking-widest animate-pulse">Sincronizando Frota...</p>
     </div>
 
     <header class="bg-slate-900 text-white shadow-2xl sticky top-0 z-50 border-b border-blue-500/30">
-        <div class="max-w-[1900px] mx-auto p-4 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <span class="text-3xl">🚛</span>
+        <div class="max-w-[1900px] mx-auto p-5 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600 p-2 rounded-xl text-2xl">🚛</div>
                 <div>
-                    <h1 class="text-xl font-black tracking-tighter leading-none">PRO-MAP</h1>
-                    <p class="text-[9px] text-blue-400 font-bold uppercase tracking-[0.3em]">Logística e Frota</p>
+                    <h1 class="text-2xl font-black tracking-tighter leading-none">PRO-MAP</h1>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-[0.3em]">Gestão de Meios</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-2 bg-slate-800 p-1.5 rounded-2xl border border-slate-700 shadow-inner">
-                <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-700 rounded-lg transition text-xl">◀</button>
-                <div class="flex flex-col items-center min-w-[200px]">
-                    <span id="week-label" class="text-xs font-black uppercase tracking-widest text-blue-50"></span>
-                </div>
-                <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-700 rounded-lg transition text-xl">▶</button>
+            <div class="flex items-center gap-4 bg-slate-800 p-2 rounded-2xl border border-slate-700 shadow-inner">
+                <button onclick="changeWeek(-1)" class="w-10 h-10 hover:bg-slate-700 rounded-xl transition flex items-center justify-center font-bold">◀</button>
+                <span id="week-label" class="text-sm font-black uppercase tracking-widest min-w-[180px] text-center"></span>
+                <button onclick="changeWeek(1)" class="w-10 h-10 hover:bg-slate-700 rounded-xl transition flex items-center justify-center font-bold">▶</button>
             </div>
 
-            <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-black text-xs transition-all shadow-lg active:scale-95 uppercase tracking-wider">
-                Atualizar Quadro ↻
+            <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-2xl font-black text-xs transition-all shadow-lg active:scale-95 uppercase tracking-widest border-b-4 border-blue-800">
+                Atualizar Quadro
             </button>
         </div>
     </header>
 
-    <main id="board" class="p-6 flex gap-6 overflow-x-auto items-start snap-x">
-    </main>
+    <main id="board" class="board-container">
+        </main>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoHwKatxQVRGRH9EoAPxXcAlJGSPAoZ325skC4o02EufOnuoPFsE8AAAIBDHpvIUIT/exec';
@@ -80,7 +110,7 @@
                 appData = await response.json();
                 render();
             } catch (e) {
-                alert("Erro de ligação ao Sheets.");
+                alert("Erro de conexão. Verifique a publicação do Script.");
             }
             document.getElementById('loader').style.display = 'none';
         }
@@ -96,36 +126,40 @@
             board.innerHTML = '';
             const lastDay = new Date(currentMonday);
             lastDay.setDate(lastDay.getDate() + 6);
-            label.innerText = `${formatDate(currentMonday)} a ${formatDate(lastDay)}`;
+            label.innerText = `${formatDate(currentMonday)} — ${formatDate(lastDay)}`;
 
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
-                col.className = "driver-column bg-white rounded-[2.5rem] shadow-xl border border-slate-200 flex-shrink-0 overflow-hidden mb-8";
-                let html = `<div class="bg-slate-50 border-b p-6 font-black text-slate-800 text-center uppercase tracking-tighter text-xl">${mot}</div>`;
+                col.className = "driver-card";
+                let html = `<div class="bg-slate-50 border-b p-6 font-black text-slate-800 text-center uppercase tracking-tighter text-xl rounded-t-[2rem]">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday);
                     d.setDate(d.getDate() + i);
                     const dateStr = formatDate(d);
+                    const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
+
                     const services = appData.historico.filter(h => normalize(h.motorista) === normalize(mot) && normalize(h.data) === normalize(dateStr));
 
                     html += `
-                        <div class="p-4 border-b border-slate-50">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">${dateStr}</span>
-                                <button onclick="addNewRow('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 transition">+ NOVO</button>
+                        <div class="p-5 border-b border-slate-50 last:border-0 ${isToday ? 'bg-blue-50/50' : ''}">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-[12px] font-black text-slate-400 uppercase tracking-widest">${dateStr}</span>
+                                <button onclick="openForm('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow-sm">+ NOVO</button>
                             </div>
-                            <div class="space-y-3">
+                            <div class="space-y-4">
                                 ${services.map(s => `
-                                    <div class="bg-blue-600 text-white shadow-lg p-4 rounded-3xl relative border-b-4 border-blue-800">
-                                        <div class="text-[10px] font-black opacity-60 uppercase mb-1">${s.viatura || 'Viatura n/d'}</div>
-                                        <div class="text-xs font-bold leading-snug mb-3">${s.servico}</div>
-                                        <div class="flex justify-between items-center pt-2 border-t border-white/20">
-                                            <span class="text-[10px] font-mono font-bold">NEI: ${s.nei || '---'}</span>
-                                            <div class="flex gap-3">
-                                                <button onclick='editRow(${JSON.stringify(s)}, this)' class="hover:scale-125 transition" title="Editar">✏️</button>
-                                                <button onclick="deleteRow(${s.id})" class="hover:scale-125 transition" title="Eliminar">❌</button>
+                                    <div class="service-bubble bg-blue-600 text-white p-4 rounded-[1.5rem] relative border-b-4 border-blue-800 shadow-md">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="text-[10px] font-black opacity-70 uppercase tracking-wider">${s.viatura || 'Sem Viatura'}</div>
+                                            <div class="flex gap-3 bg-blue-700/50 px-2 py-1 rounded-lg">
+                                                <button onclick='editService(${JSON.stringify(s)}, this)' class="text-[14px] hover:scale-125 transition">✏️</button>
+                                                <button onclick="deleteRow(${s.id})" class="text-[14px] hover:scale-125 transition">❌</button>
                                             </div>
+                                        </div>
+                                        <div class="text-[13px] font-bold leading-relaxed mb-3">${s.servico}</div>
+                                        <div class="flex justify-between items-center pt-2 border-t border-white/20">
+                                            <span class="text-[10px] font-mono font-bold bg-white/20 px-2 py-1 rounded-md">NEI: ${s.nei || '---'}</span>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -137,53 +171,63 @@
             });
         }
 
-        function addNewRow(mot, dateStr, btn, existingData = null) {
+        // Função para abrir o formulário (Novo ou Editar)
+        function openForm(mot, dateStr, btn, existing = null) {
             const container = btn.closest('div').nextElementSibling;
-            const div = document.createElement('div');
-            div.className = "bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-blue-200 space-y-3 mb-4 animate-in slide-in-from-top-2 duration-300";
             
-            // Lógica para separar trator e reboque se vierem do "Editar"
+            // Remove qualquer outro form aberto nesta célula para não acumular
+            const existingForm = container.querySelector('.edit-form');
+            if (existingForm) existingForm.remove();
+
+            const div = document.createElement('div');
+            div.className = "edit-form bg-slate-100 p-4 rounded-2xl border-2 border-blue-300 space-y-3 mb-4 shadow-inner";
+            
             let tVal = "", rVal = "";
-            if(existingData && existingData.viatura.includes(" / ")) {
-                [tVal, rVal] = existingData.viatura.split(" / ");
+            if(existing && existing.viatura.includes(" / ")) {
+                [tVal, rVal] = existing.viatura.split(" / ");
             }
 
             div.innerHTML = `
+                <p class="text-[10px] font-black uppercase text-blue-600">${existing ? 'Editar Serviço' : 'Novo Serviço'}</p>
                 <div class="flex gap-2">
-                    <select class="w-1/2 text-[11px] border border-slate-200 p-2.5 rounded-xl font-bold bg-white" name="t">
+                    <select class="w-1/2 text-xs border-0 p-3 rounded-xl font-bold bg-white shadow-sm" id="trator">
                         <option value="">Trator</option>
                         ${appData.tratores.map(t => `<option value="${t}" ${normalize(t) === normalize(tVal) ? 'selected' : ''}>${t}</option>`).join('')}
                     </select>
-                    <select class="w-1/2 text-[11px] border border-slate-200 p-2.5 rounded-xl font-bold bg-white" name="r">
+                    <select class="w-1/2 text-xs border-0 p-3 rounded-xl font-bold bg-white shadow-sm" id="reboque">
                         <option value="">Reboque</option>
                         ${appData.reboques.map(r => `<option value="${r}" ${normalize(r) === normalize(rVal) ? 'selected' : ''}>${r}</option>`).join('')}
                     </select>
                 </div>
-                <input type="text" placeholder="Serviço (Obrigatório)" name="s" value="${existingData ? existingData.servico : ''}" class="w-full text-xs border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
-                <input type="text" placeholder="Nº Encomenda (NEI)" name="n" value="${existingData ? existingData.nei : ''}" class="w-full text-xs border border-slate-200 p-2.5 rounded-xl font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="text" placeholder="Serviço (Obrigatório)" id="servico" value="${existing ? existing.servico : ''}" class="w-full text-xs border-0 p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                <input type="text" placeholder="Número NEI" id="nei" value="${existing ? existing.nei : ''}" class="w-full text-xs border-0 p-3 rounded-xl shadow-sm font-mono outline-none">
                 <div class="flex gap-2 pt-1">
-                    <button onclick="save(this, '${mot}', '${dateStr}', ${existingData ? existingData.id : null})" class="flex-1 bg-green-600 text-white text-[11px] py-2.5 rounded-xl font-black uppercase tracking-widest shadow-lg">
-                        ${existingData ? 'Atualizar' : 'Gravar'}
+                    <button onclick="processSave(this, '${mot}', '${dateStr}', ${existing ? existing.id : null})" class="flex-1 bg-green-600 text-white text-[11px] py-3 rounded-xl font-black uppercase tracking-widest shadow-md">
+                        ${existing ? 'Atualizar' : 'Confirmar'}
                     </button>
-                    <button onclick="this.parentElement.parentElement.remove()" class="px-3 text-slate-400">✕</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="px-4 bg-white text-slate-400 rounded-xl shadow-sm hover:text-red-500">✕</button>
                 </div>
             `;
             container.prepend(div);
-            if(existingData && btn.closest('.bg-blue-600')) btn.closest('.bg-blue-600').remove();
+            div.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        function editRow(serviceObj, btn) {
-            addNewRow(serviceObj.motorista, serviceObj.data, btn, serviceObj);
+        function editService(s, btn) {
+            // "s" já vem como objeto JSON
+            openForm(s.motorista, s.data, btn, s);
         }
 
-        async function save(btn, mot, dateStr, editId = null) {
-            const row = btn.closest('div').parentElement;
-            const servico = row.querySelector('[name="s"]').value;
+        async function processSave(btn, mot, dateStr, editId) {
+            const form = btn.closest('.edit-form');
+            const servico = form.querySelector('#servico').value;
             
-            if(!servico.trim()) return alert("O campo 'Serviço' é obrigatório!");
+            if(!servico.trim()) {
+                alert("O campo Serviço é obrigatório!");
+                return;
+            }
 
-            const t = row.querySelector('[name="t"]').value;
-            const r = row.querySelector('[name="r"]').value;
+            const t = form.querySelector('#trator').value;
+            const r = form.querySelector('#reboque').value;
             const viatura = (t || r) ? `${t} / ${r}` : "";
 
             const payload = {
@@ -193,23 +237,24 @@
                 motorista: mot,
                 viatura: viatura,
                 servico: servico,
-                nei: row.querySelector('[name="n"]').value || ""
+                nei: form.querySelector('#nei').value || ""
             };
 
             btn.disabled = true;
-            btn.innerText = "A PROCESSAR...";
+            btn.innerText = "A GUARDAR...";
 
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 await loadData();
             } catch (e) {
-                alert("Erro ao gravar.");
+                alert("Erro ao comunicar com o Sheets.");
                 btn.disabled = false;
+                btn.innerText = "Tentar Novamente";
             }
         }
 
         async function deleteRow(id) {
-            if(!confirm("Eliminar este serviço?")) return;
+            if(!confirm("Deseja apagar este serviço?")) return;
             document.getElementById('loader').style.display = 'flex';
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", id: id}) });
             await loadData();
