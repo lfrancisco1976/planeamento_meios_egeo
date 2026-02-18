@@ -189,7 +189,7 @@
                                 ${services.map(s => `
                                     <div class="service-bubble group">
                                         <div class="flex justify-between mb-1">
-                                            <span class="text-[9px] font-bold text-blue-500 uppercase">${s.viatura || ''}</span>
+                                            <span class="text-[10px] font-bold text-blue-500 uppercase">${s.viatura || ''}</span>
                                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
                                                 <button onclick='openEdit(${JSON.stringify(s)})' class="text-[10px]">✏️</button>
                                                 <button onclick="deleteRow(${s.id})" class="text-[10px]">❌</button>
