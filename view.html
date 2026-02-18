@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EGEO - TA | Planeamento de Frota</title>
+    <title>EGEO - TA | Consulta Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; }
 
         .board-wrapper {
@@ -16,22 +15,20 @@
             overflow-x: auto;
             gap: 0;
             min-height: 85vh;
-            scroll-behavior: smooth;
         }
 
         .driver-column {
-            min-width: 420px;
+            min-width: 400px;
             flex: 1;
             border-right: 1px solid #f1f5f9;
-            transition: opacity 0.3s ease;
         }
 
         @media (max-width: 768px) {
-            .driver-column { min-width: 90vw; }
+            .driver-column { min-width: 85vw; }
         }
 
         .day-cell {
-            padding: 2rem;
+            padding: 1.5rem;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
             flex-direction: column;
@@ -40,51 +37,43 @@
         .service-bubble {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-left: 6px solid #1e293b;
-            border-radius: 1.25rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
+            border-left: 5px solid #1e293b;
+            border-radius: 1rem;
+            padding: 1.2rem;
+            margin-bottom: 0.75rem;
         }
 
         .sticky-header { position: sticky; top: 0; background: white; z-index: 50; }
         
-        /* Scrollbar Personalizada */
         ::-webkit-scrollbar { height: 8px; }
-        ::-webkit-scrollbar-track { background: #f8fafc; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div id="loader" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Sincronizando Live...</p>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900 mb-2"></div>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">A carregar planeamento...</p>
     </div>
 
-    <header class="border-b border-slate-100 p-4 md:p-6 sticky-header">
-        <div class="max-w-[2500px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            
-            <div class="flex items-center gap-4">
-                <span class="text-4xl">🚛</span>
-                <div>
-                    <h1 class="text-2xl font-black tracking-tighter leading-none">EGEO - TA</h1>
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Consulta de Motoristas</span>
-                </div>
+    <header class="border-b border-slate-100 p-4 sticky-header">
+        <div class="max-w-[2500px] mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">📅</span>
+                <h1 class="text-2xl font-black tracking-tighter">EGEO - TA</h1>
             </div>
             
-            <div class="flex flex-wrap items-center justify-center gap-4">
-                <div class="relative">
-                    <select id="driver-filter" onchange="applyFilter()" class="appearance-none bg-slate-900 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest outline-none hover:bg-blue-600 transition cursor-pointer">
-                        <option value="all">TODOS OS MOTORISTAS</option>
-                    </select>
-                </div>
+            <div class="flex items-center gap-4">
+                <select id="driver-filter" onchange="applyFilter()" class="bg-slate-100 border-none rounded-xl px-4 py-2 text-xs font-black uppercase outline-none">
+                    <option value="all">TODOS</option>
+                </select>
 
-                <button onclick="goToday()" class="px-6 py-3 text-xs font-black uppercase border-2 border-slate-100 rounded-2xl hover:bg-slate-50 transition">Hoje</button>
+                <button onclick="goToday()" class="px-4 py-2 text-xs font-bold uppercase border border-slate-200 rounded-lg">Hoje</button>
                 
-                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                    <button onclick="changeWeek(-1)" class="text-xl font-bold hover:text-blue-600 transition">◀</button>
-                    <span id="week-label" class="text-xs font-black uppercase tracking-widest font-mono min-w-[160px] text-center"></span>
-                    <button onclick="changeWeek(1)" class="text-xl font-bold hover:text-blue-600 transition">▶</button>
+                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                    <button onclick="changeWeek(-1)" class="font-bold">◀</button>
+                    <span id="week-label" class="text-xs font-black uppercase font-mono"></span>
+                    <button onclick="changeWeek(1)" class="font-bold">▶</button>
                 </div>
             </div>
         </div>
@@ -93,14 +82,16 @@
     <main id="board" class="board-wrapper"></main>
 
     <script>
-        // SUBSTITUI PELO TEU URL DO GOOGLE SCRIPT
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvZ6RDtubzNKAbm0MqyJLVLq6E6x1CdZBtoNhl9OTf3FKImo3lPGdHpSfMoKdr0l-2/exec';
-        
         let currentMonday = getMonday(new Date());
         let appData = { motoristas: [], historico: [] };
 
+        const weekDays = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+        const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
         function getMonday(d) {
-            d = new Date(d); let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
+            d = new Date(d); 
+            let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
             return new Date(d.setDate(diff));
         }
 
@@ -113,21 +104,17 @@
                 appData = await resp.json();
                 populateFilter();
                 render();
-            } catch (e) { 
-                console.error(e);
-                alert("Erro ao carregar dados. Verifique a ligação.");
-            }
+            } catch (e) { console.error(e); }
             document.getElementById('loader').style.display = 'none';
         }
 
         function populateFilter() {
             const select = document.getElementById('driver-filter');
             const currentVal = select.value;
-            select.innerHTML = '<option value="all">TODOS OS MOTORISTAS</option>';
-            appData.motoristas.sort().forEach(mot => {
+            select.innerHTML = '<option value="all">TODOS</option>';
+            appData.motoristas.forEach(mot => {
                 const opt = document.createElement('option');
-                opt.value = mot;
-                opt.innerText = mot.toUpperCase();
+                opt.value = mot; opt.innerText = mot.toUpperCase();
                 select.appendChild(opt);
             });
             select.value = currentVal;
@@ -144,9 +131,8 @@
         function render() {
             const board = document.getElementById('board');
             board.innerHTML = '';
-            const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-            const formatDate = (date) => `${date.getDate()}/${months[date.getMonth()]}`;
             
+            const formatDate = (date) => `${date.getDate()}/${months[date.getMonth()]}`;
             document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(new Date(new Date(currentMonday).setDate(currentMonday.getDate() + 6)))}`;
 
             appData.motoristas.forEach(mot => {
@@ -154,30 +140,32 @@
                 col.className = "driver-column";
                 col.setAttribute('data-motorista', mot);
                 
-                let html = `<div class="p-8 font-black text-center border-b border-slate-100 uppercase tracking-tighter text-3xl sticky top-[80px] md:top-[96px] bg-white z-20">${mot}</div>`;
+                let html = `<div class="p-6 font-black text-center border-b border-slate-100 uppercase text-2xl sticky top-0 bg-white z-20">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const ds = formatDate(d);
+                    const dWeek = weekDays[d.getDay()]; // Obtém SEG, TER, etc.
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
+                    
                     const rowColor = i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40';
                     const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
 
                     html += `
                         <div class="day-cell ${isToday ? 'bg-blue-50/50' : rowColor}" id="day-${i}-${mot.replace(/\s+/g, '')}">
-                            <div class="mb-6">
-                                <span class="text-2xl font-black uppercase tracking-tight ${isToday ? 'text-blue-600' : 'text-slate-300'}">
-                                    ${ds} ${isToday ? '• HOJE' : ''}
+                            <div class="mb-4">
+                                <span class="text-xl font-black uppercase tracking-tight ${isToday ? 'text-blue-600' : 'text-slate-400'}">
+                                    ${dWeek}, ${ds} ${isToday ? '• HOJE' : ''}
                                 </span>
                             </div>
-                            <div class="flex-grow space-y-4">
+                            <div class="flex-grow space-y-3">
                                 ${services.length > 0 ? services.map(s => `
                                     <div class="service-bubble">
-                                        <div class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">${s.viatura || 'Sem Viatura'}</div>
-                                        <div class="text-lg font-bold leading-tight text-slate-800">${s.servico}</div>
-                                        ${s.nei && s.nei !== '---' ? `<div class="mt-4 text-xs font-mono text-slate-500 font-bold bg-white border border-slate-200 px-3 py-1.5 rounded-lg inline-block">ID: ${s.nei}</div>` : ''}
+                                        <div class="text-[10px] font-black text-blue-600 uppercase mb-1">${s.viatura || ''}</div>
+                                        <div class="text-sm font-bold text-slate-800">${s.servico}</div>
+                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[11px] font-mono text-slate-400 font-bold"># ${s.nei}</div>` : ''}
                                     </div>
-                                `).join('') : '<div class="py-4 text-[10px] font-bold text-slate-200 uppercase tracking-widest">Sem registos</div>'}
+                                `).join('') : '<div class="text-[10px] font-bold text-slate-200 uppercase">Sem planeamento</div>'}
                             </div>
                         </div>`;
                 }
@@ -188,26 +176,21 @@
         }
 
         function equalizeHeights() {
-            if(window.innerWidth < 768) {
-                document.querySelectorAll('.day-cell').forEach(c => c.style.height = 'auto');
-                return;
-            }
+            if(window.innerWidth < 768) return;
             setTimeout(() => {
                 for (let i = 0; i < 7; i++) {
                     let maxHeight = 0;
                     const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);
                     dayCells.forEach(cell => {
                         cell.style.height = 'auto';
-                        if (cell.parentElement.style.display !== 'none' && cell.offsetHeight > maxHeight) {
-                            maxHeight = cell.offsetHeight;
-                        }
+                        if (cell.parentElement.style.display !== 'none' && cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
                     });
                     dayCells.forEach(cell => { if (maxHeight > 0) cell.style.height = maxHeight + 'px'; });
                 }
             }, 100);
         }
 
-        function changeWeek(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
+        window.changeWeek = function(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
         loadData();
     </script>
 </body>
