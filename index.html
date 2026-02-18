@@ -8,139 +8,101 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
-        :root {
-            font-size: 16px; /* Aumenta a base para PC */
-        }
-
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            overflow-x: hidden;
-        }
-        
-        /* Layout Adaptativo */
-        .board-container { 
-            display: flex; 
-            gap: 1.5rem; 
-            padding: 2rem; 
-            overflow-x: auto; 
-            align-items: start;
-            -webkit-overflow-scrolling: touch;
-            min-height: 85vh;
+            background-color: #ffffff; 
+            color: #1e293b;
         }
 
-        /* Coluna do Motorista - Adaptada para PC e Mobile */
-        .driver-card { 
-            min-width: 380px; /* Largura ideal para leitura em PC */
-            max-width: 420px;
-            background: white; 
-            border-radius: 2rem; 
-            border: 1px solid #e2e8f0; 
-            flex-shrink: 0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        @media (max-width: 640px) {
-            .driver-card {
-                min-width: 85vw; /* Quase a largura toda no telemóvel */
-            }
-            .board-container {
-                padding: 1rem;
-                gap: 1rem;
-            }
-        }
-
-        /* Modal Responsivo */
-        .modal { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(15,23,42,0.7); 
-            z-index: 1000; 
-            align-items: center; 
-            justify-content: center; 
-            backdrop-filter: blur(8px); 
+        /* Container Principal */
+        .board-wrapper {
+            display: flex;
             padding: 1rem;
-        }
-        
-        .modal-content { 
-            background: white; 
-            width: 100%; 
-            max-width: 500px; 
-            padding: 2.5rem; 
-            border-radius: 2.5rem; 
-        }
-        
-        .service-bubble { 
-            background-color: white; 
-            border: 1px solid #e2e8f0; 
-            transition: all 0.2s ease-in-out;
+            overflow-x: auto;
+            gap: 0; /* Colunas encostadas para manter o alinhamento visual */
         }
 
-        /* Scrollbar mais visível no PC */
-        ::-webkit-scrollbar { height: 12px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; border: 3px solid #f1f5f9; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .driver-column {
+            min-width: 400px; /* Largura adaptada para PC */
+            flex: 1;
+            border-right: 1px solid #f1f5f9;
+        }
+
+        @media (max-width: 768px) {
+            .driver-column { min-width: 85vw; }
+        }
+
+        /* Célula de Dia - Altura mínima para garantir nivelamento */
+        .day-cell {
+            min-height: 150px;
+            padding: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .service-bubble {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Scrollbar Minimalista */
+        ::-webkit-scrollbar { height: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div id="loader" class="fixed inset-0 bg-white/90 z-[2000] hidden flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4"></div>
-        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-600">Sincronizando Frota...</p>
+    <div id="loader" class="fixed inset-0 bg-white z-[2000] hidden flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900 mb-2"></div>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">A carregar...</p>
     </div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content shadow-2xl">
-            <h2 id="modal-title" class="text-3xl font-black mb-6 text-slate-900 tracking-tighter">Serviço</h2>
-            <div class="space-y-4">
-                <div class="flex gap-3">
-                    <select id="m-trator" class="w-1/2 p-4 bg-slate-50 rounded-2xl text-sm font-bold border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"></select>
-                    <select id="m-reboque" class="w-1/2 p-4 bg-slate-50 rounded-2xl text-sm font-bold border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"></select>
-                </div>
-                <input type="text" id="m-servico" placeholder="Descrição do Serviço" class="w-full p-4 bg-slate-50 rounded-2xl text-base font-bold border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="text" id="m-nei" placeholder="Nº Encomenda / NEI" class="w-full p-4 bg-slate-50 rounded-2xl text-base font-mono border border-slate-200 outline-none">
-                
-                <div class="flex gap-3 pt-6">
-                    <button onclick="closeModal()" class="flex-1 py-4 text-sm font-bold text-slate-400 hover:text-slate-600">Sair</button>
-                    <button id="btn-save" class="flex-[2] py-4 bg-blue-600 text-white text-sm font-black rounded-2xl uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">Confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <header class="bg-white border-b border-slate-200 px-8 py-6 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-[2000px] mx-auto flex flex-wrap justify-between items-center gap-6">
+    <header class="border-b border-slate-100 p-6 sticky top-0 bg-white z-50">
+        <div class="max-w-[2500px] mx-auto flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-4">
-                <span class="text-4xl">🚛</span>
-                <div>
-                    <h1 class="text-2xl font-black tracking-tighter text-slate-900 leading-none">PRO-MAP</h1>
-                    <span class="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">Logística & Gestão</span>
-                </div>
+                <span class="text-3xl">🚛</span>
+                <h1 class="text-3xl font-black tracking-tighter">PRO-MAP</h1>
             </div>
             
             <div class="flex items-center gap-4">
-                <button onclick="goToday()" class="px-6 py-3 text-xs font-black uppercase bg-slate-900 text-white rounded-xl hover:bg-blue-600 transition shadow-lg shadow-slate-200">Hoje</button>
-                <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-                    <button onclick="changeWeek(-1)" class="w-10 h-10 flex items-center justify-center hover:bg-white rounded-xl transition text-slate-500 text-xl font-bold">◀</button>
-                    <span id="week-label" class="text-xs font-black uppercase tracking-widest min-w-[180px] text-center text-slate-700 font-mono"></span>
-                    <button onclick="changeWeek(1)" class="w-10 h-10 flex items-center justify-center hover:bg-white rounded-xl transition text-slate-500 text-xl font-bold">▶</button>
+                <button onclick="goToday()" class="px-6 py-2 text-xs font-bold uppercase border border-slate-200 rounded-lg hover:bg-slate-50">Hoje</button>
+                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl">
+                    <button onclick="changeWeek(-1)" class="text-xl font-bold">◀</button>
+                    <span id="week-label" class="text-sm font-black uppercase tracking-widest font-mono"></span>
+                    <button onclick="changeWeek(1)" class="text-xl font-bold">▶</button>
                 </div>
+                <button onclick="loadData()" class="bg-slate-900 text-white px-6 py-3 rounded-lg text-xs font-black uppercase tracking-widest">Atualizar ↻</button>
             </div>
-
-            <button onclick="loadData()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.1em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center gap-2">
-                <span>Atualizar Quadro</span>
-                <span class="text-lg">↻</span>
-            </button>
         </div>
     </header>
 
-    <main id="board" class="board-container"></main>
+    <main id="board" class="board-wrapper"></main>
+
+    <div id="modal" class="fixed inset-0 bg-slate-900/50 hidden z-[3000] items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md p-8 rounded-3xl">
+            <h2 id="modal-title" class="text-2xl font-black mb-6">Novo Registo</h2>
+            <div class="space-y-4">
+                <div class="flex gap-2">
+                    <select id="m-trator" class="w-1/2 p-4 bg-slate-50 rounded-xl text-sm font-bold outline-none border border-slate-100"></select>
+                    <select id="m-reboque" class="w-1/2 p-4 bg-slate-50 rounded-xl text-sm font-bold outline-none border border-slate-100"></select>
+                </div>
+                <input type="text" id="m-servico" placeholder="Descrição do Serviço" class="w-full p-4 bg-slate-50 rounded-xl text-base font-bold outline-none border border-slate-100">
+                <input type="text" id="m-nei" placeholder="Número Encomenda" class="w-full p-4 bg-slate-50 rounded-xl text-base font-mono outline-none border border-slate-100">
+                <div class="flex gap-4 pt-4">
+                    <button onclick="closeModal()" class="flex-1 font-bold text-slate-400">Sair</button>
+                    <button id="btn-save" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-xl uppercase tracking-widest">Gravar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvZ6RDtubzNKAbm0MqyJLVLq6E6x1CdZBtoNhl9OTf3FKImo3lPGdHpSfMoKdr0l-2/exec';
-        
         let currentMonday = getMonday(new Date());
         let appData = { motoristas: [], tratores: [], reboques: [], historico: [] };
         let activeEditData = null;
@@ -153,13 +115,13 @@
         function goToday() { currentMonday = getMonday(new Date()); loadData(); }
 
         async function loadData() {
-            document.getElementById('loader').style.display = 'flex';
+            document.getElementById('loader').classList.remove('hidden');
             try {
                 const resp = await fetch(SCRIPT_URL);
                 appData = await resp.json();
                 render();
             } catch (e) { console.error(e); }
-            document.getElementById('loader').style.display = 'none';
+            document.getElementById('loader').classList.add('hidden');
         }
 
         function render() {
@@ -170,52 +132,70 @@
             
             document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(new Date(new Date(currentMonday).setDate(currentMonday.getDate() + 6)))}`;
 
+            // Primeiro, vamos calcular a altura máxima de cada dia da semana para nivelar
+            let dayHeights = [0, 0, 0, 0, 0, 0, 0];
+            
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
-                col.className = "driver-card";
-                let html = `<div class="p-6 font-black text-center border-b uppercase tracking-tighter text-lg text-slate-800 bg-white sticky top-0 z-10 rounded-t-[2rem]">${mot}</div>`;
+                col.className = "driver-column";
+                
+                // Header do Motorista (3xl para destaque)
+                let html = `<div class="p-8 font-black text-center border-b border-slate-100 uppercase tracking-tighter text-3xl sticky top-0 bg-white z-20">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const ds = formatDate(d);
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
                     
-                    const isEvenRow = i % 2 === 0;
-                    let rowColor = isEvenRow ? 'bg-white' : 'bg-slate-50/50';
-                    if (isToday) rowColor = 'bg-amber-50/60';
-
+                    const rowColor = i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30';
                     const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
 
                     html += `
-                        <div class="p-6 border-b border-slate-100 last:border-0 ${rowColor}">
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${isToday ? 'bg-amber-400 text-amber-950' : 'bg-slate-200 text-slate-600'}">
+                        <div class="day-cell ${isToday ? 'bg-amber-50/50' : rowColor}" id="day-${i}-${mot}">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="text-xl font-black uppercase tracking-tight ${isToday ? 'text-amber-600' : 'text-slate-400'}">
                                     ${ds} ${isToday ? '• HOJE' : ''}
                                 </span>
-                                <button onclick="openModal('${mot}', '${ds}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-400 font-bold text-xl transition-all">＋</button>
+                                <button onclick="openModal('${mot}', '${ds}')" class="text-slate-300 hover:text-slate-900 text-2xl font-bold">＋</button>
                             </div>
-                            <div class="space-y-3">
+                            <div class="flex-grow space-y-3">
                                 ${services.map(s => `
-                                    <div class="service-bubble p-4 rounded-2xl relative group border-l-4 border-l-blue-600 shadow-sm">
+                                    <div class="service-bubble group relative">
                                         <div class="flex justify-between items-start mb-2">
-                                            <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest">${s.viatura || ''}</span>
-                                            <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">${s.viatura || ''}</span>
+                                            <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button onclick='openEdit(${JSON.stringify(s)})' class="text-sm">✏️</button>
                                                 <button onclick="deleteRow(${s.id})" class="text-sm">❌</button>
                                             </div>
                                         </div>
-                                        <div class="text-[13px] font-bold leading-relaxed text-slate-900">${s.servico}</div>
-                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[10px] font-mono font-bold text-slate-400"># ${s.nei}</div>` : ''}
+                                        <div class="text-sm font-bold leading-tight text-slate-800">${s.servico}</div>
+                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[11px] font-mono text-slate-400 font-bold">${s.nei}</div>` : ''}
                                     </div>
                                 `).join('')}
                             </div>
                         </div>`;
                 }
-                col.innerHTML = html; board.appendChild(col);
+                col.innerHTML = html;
+                board.appendChild(col);
             });
+            
+            // Lógica para equalizar as alturas das células do mesmo dia
+            setTimeout(() => {
+                for (let i = 0; i < 7; i++) {
+                    let maxHeight = 0;
+                    const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);
+                    dayCells.forEach(cell => {
+                        cell.style.height = 'auto'; // Reset
+                        if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
+                    });
+                    dayCells.forEach(cell => {
+                        cell.style.height = maxHeight + 'px';
+                    });
+                }
+            }, 50);
         }
 
-        // Funções de Modal e Gravação (Mantidas e Otimizadas)
+        // Funções de Modal e Gravação
         function openModal(mot, ds) {
             activeEditData = { motorista: mot, data: ds, action: 'add' };
             resetModalFields();
@@ -226,7 +206,7 @@
         function openEdit(s) {
             activeEditData = { ...s, action: 'edit' };
             resetModalFields();
-            document.getElementById('modal-title').innerText = "Editar Serviço";
+            document.getElementById('modal-title').innerText = "Editar Registo";
             if(s.viatura.includes(' / ')) {
                 const parts = s.viatura.split(' / ');
                 document.getElementById('m-trator').value = parts[0].trim();
@@ -249,8 +229,7 @@
 
         async function save() {
             const serv = document.getElementById('m-servico').value;
-            if(!serv.trim()) return alert("O serviço é obrigatório.");
-            
+            if(!serv.trim()) return alert("Serviço obrigatório.");
             const payload = {
                 action: activeEditData.action,
                 id: activeEditData.id || null,
@@ -260,8 +239,7 @@
                 servico: serv,
                 nei: document.getElementById('m-nei').value || "---"
             };
-
-            document.getElementById('loader').style.display = 'flex';
+            document.getElementById('loader').classList.remove('hidden');
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
             closeModal();
             loadData();
@@ -269,7 +247,7 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
         function changeWeek(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
-        async function deleteRow(id) { if(confirm("Eliminar este registo?")) { document.getElementById('loader').style.display = 'flex'; await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', id: id}) }); loadData(); } }
+        async function deleteRow(id) { if(confirm("Eliminar registo?")) { document.getElementById('loader').classList.remove('hidden'); await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', id: id}) }); loadData(); } }
         
         loadData();
     </script>
