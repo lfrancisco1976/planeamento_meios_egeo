@@ -24,7 +24,7 @@
 
     <div id="loader" class="loading-overlay">
         <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4"></div>
-        <p class="font-bold text-slate-700 uppercase tracking-widest text-xs">Sincronizando com Folha1 e DEFINIÇÕES...</p>
+        <p class="font-bold text-slate-700 uppercase tracking-widest text-xs">Sincronizando dados...</p>
     </div>
 
     <header class="bg-slate-900 text-white shadow-2xl sticky top-0 z-50 border-b border-blue-500/30">
@@ -33,14 +33,14 @@
                 <span class="text-3xl">🚛</span>
                 <div>
                     <h1 class="text-xl font-black tracking-tighter leading-none">PRO-MAP</h1>
-                    <p class="text-[9px] text-blue-400 font-bold uppercase tracking-[0.3em]">Sistema de Planeamento</p>
+                    <p class="text-[9px] text-blue-400 font-bold uppercase tracking-[0.3em]">Logística e Frota</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-2 bg-slate-800 p-1.5 rounded-2xl border border-slate-700 shadow-inner">
                 <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-700 rounded-lg transition text-xl">◀</button>
                 <div class="flex flex-col items-center min-w-[200px]">
-                    <span id="week-label" class="text-xs font-black uppercase tracking-widest text-blue-50">A carregar...</span>
+                    <span id="week-label" class="text-xs font-black uppercase tracking-widest text-blue-50"></span>
                 </div>
                 <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-700 rounded-lg transition text-xl">▶</button>
             </div>
@@ -52,10 +52,9 @@
     </header>
 
     <main id="board" class="p-6 flex gap-6 overflow-x-auto items-start snap-x">
-        </main>
+    </main>
 
     <script>
-        // URL DA SUA NOVA IMPLEMENTAÇÃO
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoHwKatxQVRGRH9EoAPxXcAlJGSPAoZ325skC4o02EufOnuoPFsE8AAAIBDHpvIUIT/exec';
         
         let currentMonday = getMonday(new Date());
@@ -78,16 +77,10 @@
             document.getElementById('loader').style.display = 'flex';
             try {
                 const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                
-                if (data.error) {
-                    alert("Erro no Script: " + data.error);
-                } else {
-                    appData = data;
-                    render();
-                }
+                appData = await response.json();
+                render();
             } catch (e) {
-                alert("Erro de ligação. Verifique se o Script está publicado para 'Anyone'.");
+                alert("Erro de ligação ao Sheets.");
             }
             document.getElementById('loader').style.display = 'none';
         }
@@ -101,49 +94,38 @@
             const board = document.getElementById('board');
             const label = document.getElementById('week-label');
             board.innerHTML = '';
-            
             const lastDay = new Date(currentMonday);
             lastDay.setDate(lastDay.getDate() + 6);
             label.innerText = `${formatDate(currentMonday)} a ${formatDate(lastDay)}`;
 
-            if (!appData.motoristas || appData.motoristas.length === 0) {
-                board.innerHTML = `<p class="text-slate-400 p-10">Nenhum motorista encontrado na folha DEFINIÇÕES.</p>`;
-                return;
-            }
-
             appData.motoristas.forEach(mot => {
                 const col = document.createElement('div');
                 col.className = "driver-column bg-white rounded-[2.5rem] shadow-xl border border-slate-200 flex-shrink-0 overflow-hidden mb-8";
-                
                 let html = `<div class="bg-slate-50 border-b p-6 font-black text-slate-800 text-center uppercase tracking-tighter text-xl">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday);
                     d.setDate(d.getDate() + i);
                     const dateStr = formatDate(d);
-                    const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
-
-                    const services = appData.historico.filter(h => 
-                        normalize(h.motorista) === normalize(mot) && 
-                        normalize(h.data) === normalize(dateStr)
-                    );
+                    const services = appData.historico.filter(h => normalize(h.motorista) === normalize(mot) && normalize(h.data) === normalize(dateStr));
 
                     html += `
-                        <div class="p-4 border-b border-slate-50 ${isToday ? 'bg-blue-50/40' : ''}">
+                        <div class="p-4 border-b border-slate-50">
                             <div class="flex justify-between items-center mb-3">
-                                <span class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">${dateStr}</span>
-                                <button onclick="addNewRow('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 transition shadow-md shadow-slate-200">+ NOVO</button>
+                                <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">${dateStr}</span>
+                                <button onclick="addNewRow('${mot}', '${dateStr}', this)" class="bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 transition">+ NOVO</button>
                             </div>
                             <div class="space-y-3">
                                 ${services.map(s => `
-                                    <div class="bg-blue-600 text-white shadow-lg p-4 rounded-3xl relative group border-b-4 border-blue-800 animate-in fade-in duration-500">
-                                        <div class="text-[10px] font-black opacity-60 uppercase mb-1 tracking-wider">${s.viatura}</div>
+                                    <div class="bg-blue-600 text-white shadow-lg p-4 rounded-3xl relative border-b-4 border-blue-800">
+                                        <div class="text-[10px] font-black opacity-60 uppercase mb-1">${s.viatura || 'Viatura n/d'}</div>
                                         <div class="text-xs font-bold leading-snug mb-3">${s.servico}</div>
                                         <div class="flex justify-between items-center pt-2 border-t border-white/20">
-                                            <span class="text-[10px] font-mono font-bold bg-white/10 px-2 py-0.5 rounded">NEI: ${s.nei}</span>
-                                            <button onclick="deleteRow(${s.id})" class="text-white hover:text-red-200 transition-all p-1 hover:scale-125" title="Eliminar">
-                                                ❌
-                                            </button>
+                                            <span class="text-[10px] font-mono font-bold">NEI: ${s.nei || '---'}</span>
+                                            <div class="flex gap-3">
+                                                <button onclick='editRow(${JSON.stringify(s)}, this)' class="hover:scale-125 transition" title="Editar">✏️</button>
+                                                <button onclick="deleteRow(${s.id})" class="hover:scale-125 transition" title="Eliminar">❌</button>
+                                            </div>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -155,82 +137,84 @@
             });
         }
 
-        function addNewRow(mot, dateStr, btn) {
+        function addNewRow(mot, dateStr, btn, existingData = null) {
             const container = btn.closest('div').nextElementSibling;
             const div = document.createElement('div');
             div.className = "bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-blue-200 space-y-3 mb-4 animate-in slide-in-from-top-2 duration-300";
+            
+            // Lógica para separar trator e reboque se vierem do "Editar"
+            let tVal = "", rVal = "";
+            if(existingData && existingData.viatura.includes(" / ")) {
+                [tVal, rVal] = existingData.viatura.split(" / ");
+            }
+
             div.innerHTML = `
                 <div class="flex gap-2">
                     <select class="w-1/2 text-[11px] border border-slate-200 p-2.5 rounded-xl font-bold bg-white" name="t">
-                        <option value="">Trator</option>${appData.tratores.map(t => `<option value="${t}">${t}</option>`).join('')}
+                        <option value="">Trator</option>
+                        ${appData.tratores.map(t => `<option value="${t}" ${normalize(t) === normalize(tVal) ? 'selected' : ''}>${t}</option>`).join('')}
                     </select>
                     <select class="w-1/2 text-[11px] border border-slate-200 p-2.5 rounded-xl font-bold bg-white" name="r">
-                        <option value="">Reboque</option>${appData.reboques.map(r => `<option value="${r}">${r}</option>`).join('')}
+                        <option value="">Reboque</option>
+                        ${appData.reboques.map(r => `<option value="${r}" ${normalize(r) === normalize(rVal) ? 'selected' : ''}>${r}</option>`).join('')}
                     </select>
                 </div>
-                <input type="text" placeholder="O que vai fazer?" name="s" class="w-full text-xs border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                <input type="text" placeholder="Nº Encomenda (NEI)" name="n" class="w-full text-xs border border-slate-200 p-2.5 rounded-xl font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="text" placeholder="Serviço (Obrigatório)" name="s" value="${existingData ? existingData.servico : ''}" class="w-full text-xs border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                <input type="text" placeholder="Nº Encomenda (NEI)" name="n" value="${existingData ? existingData.nei : ''}" class="w-full text-xs border border-slate-200 p-2.5 rounded-xl font-mono focus:ring-2 focus:ring-blue-500 outline-none">
                 <div class="flex gap-2 pt-1">
-                    <button onclick="save(this, '${mot}', '${dateStr}')" class="flex-1 bg-green-600 text-white text-[11px] py-2.5 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-green-100">Gravar Dados</button>
-                    <button onclick="this.parentElement.parentElement.remove()" class="px-3 text-slate-400 hover:text-red-500 transition-colors">✕</button>
+                    <button onclick="save(this, '${mot}', '${dateStr}', ${existingData ? existingData.id : null})" class="flex-1 bg-green-600 text-white text-[11px] py-2.5 rounded-xl font-black uppercase tracking-widest shadow-lg">
+                        ${existingData ? 'Atualizar' : 'Gravar'}
+                    </button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="px-3 text-slate-400">✕</button>
                 </div>
             `;
             container.prepend(div);
+            if(existingData && btn.closest('.bg-blue-600')) btn.closest('.bg-blue-600').remove();
         }
 
-        async function save(btn, mot, dateStr) {
+        function editRow(serviceObj, btn) {
+            addNewRow(serviceObj.motorista, serviceObj.data, btn, serviceObj);
+        }
+
+        async function save(btn, mot, dateStr, editId = null) {
             const row = btn.closest('div').parentElement;
+            const servico = row.querySelector('[name="s"]').value;
+            
+            if(!servico.trim()) return alert("O campo 'Serviço' é obrigatório!");
+
             const t = row.querySelector('[name="t"]').value;
             const r = row.querySelector('[name="r"]').value;
-            
-            if(!t || !r) return alert("Por favor, selecione o Trator e o Reboque.");
+            const viatura = (t || r) ? `${t} / ${r}` : "";
 
             const payload = {
+                action: editId ? "edit" : "add",
+                id: editId,
                 data: dateStr,
                 motorista: mot,
-                viatura: t + " / " + r,
-                servico: row.querySelector('[name="s"]').value || "Sem descrição",
-                nei: row.querySelector('[name="n"]').value || "---"
+                viatura: viatura,
+                servico: servico,
+                nei: row.querySelector('[name="n"]').value || ""
             };
 
             btn.disabled = true;
-            btn.innerText = "A ENVIAR...";
+            btn.innerText = "A PROCESSAR...";
 
             try {
-                const resp = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                if (resp.ok) {
-                    await loadData();
-                } else {
-                    alert("Erro ao gravar no Sheets.");
-                }
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                await loadData();
             } catch (e) {
-                alert("Erro de rede ao gravar.");
+                alert("Erro ao gravar.");
                 btn.disabled = false;
-                btn.innerText = "Gravar Dados";
             }
         }
 
         async function deleteRow(id) {
-            if(!confirm("Tem a certeza que deseja eliminar este serviço permanentemente?")) return;
-            
+            if(!confirm("Eliminar este serviço?")) return;
             document.getElementById('loader').style.display = 'flex';
-            try {
-                const resp = await fetch(SCRIPT_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({action: "delete", id: id}) 
-                });
-                if (resp.ok) {
-                    await loadData();
-                } else {
-                    alert("Erro ao eliminar no Sheets.");
-                }
-            } catch (e) {
-                alert("Erro de ligação ao eliminar.");
-            }
-            document.getElementById('loader').style.display = 'none';
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", id: id}) });
+            await loadData();
         }
 
-        // Início automático
         loadData();
     </script>
 </body>
