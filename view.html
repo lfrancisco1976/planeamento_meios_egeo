@@ -7,31 +7,60 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; }
+        
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; margin: 0; }
 
+        /* Container que permite scroll lateral mas mantém a estrutura */
         .board-wrapper {
             display: flex;
-            padding: 1rem;
+            padding: 0;
             overflow-x: auto;
-            gap: 0;
-            min-height: 85vh;
+            align-items: flex-start;
+            -webkit-overflow-scrolling: touch;
         }
 
         .driver-column {
-            min-width: 400px;
-            flex: 1;
+            min-width: 400px; /* Largura no PC */
+            flex: 1 0 auto;
             border-right: 1px solid #f1f5f9;
+            background: white;
         }
 
+        /* Ajuste para Telemóvel */
         @media (max-width: 768px) {
-            .driver-column { min-width: 85vw; }
+            .driver-column { 
+                min-width: 88vw; /* Ocupa quase o ecrã todo para ser claro */
+            }
         }
 
+        .driver-title {
+            padding: 1.5rem;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px solid #f1f5f9;
+            font-size: 1.75rem;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 30;
+        }
+
+        /* Célula de dia com altura mínima e transição suave */
         .day-cell {
             padding: 1.5rem;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
+            transition: height 0.1s ease-in-out;
+        }
+
+        .day-label {
+            font-size: 1.25rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
         }
 
         .service-bubble {
@@ -39,41 +68,51 @@
             border: 1px solid #e2e8f0;
             border-left: 5px solid #1e293b;
             border-radius: 1rem;
-            padding: 1.2rem;
+            padding: 1rem;
             margin-bottom: 0.75rem;
         }
 
-        .sticky-header { position: sticky; top: 0; background: white; z-index: 50; }
+        .sticky-header { 
+            position: sticky; 
+            top: 0; 
+            background: white; 
+            z-index: 100; 
+            border-bottom: 1px solid #f1f5f9;
+        }
         
-        ::-webkit-scrollbar { height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* Evita que o texto quebre de forma estranha */
+        .servico-desc {
+            word-break: break-word;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        #loader { transition: opacity 0.3s ease; }
     </style>
 </head>
 <body>
 
     <div id="loader" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900 mb-2"></div>
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">A carregar planeamento...</p>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div>
+        <p class="text-[10px] font-bold uppercase tracking-widest">A sincronizar...</p>
     </div>
 
-    <header class="border-b border-slate-100 p-4 sticky-header">
+    <header class="p-4 sticky-header">
         <div class="max-w-[2500px] mx-auto flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <span class="text-3xl">📅</span>
-                <h1 class="text-2xl font-black tracking-tighter">EGEO - TA</h1>
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🚛</span>
+                <h1 class="text-xl font-black tracking-tighter">EGEO - TA</h1>
             </div>
             
-            <div class="flex items-center gap-4">
-                <select id="driver-filter" onchange="applyFilter()" class="bg-slate-100 border-none rounded-xl px-4 py-2 text-xs font-black uppercase outline-none">
+            <div class="flex items-center gap-3">
+                <select id="driver-filter" onchange="applyFilter()" class="bg-slate-100 border-none rounded-lg px-3 py-2 text-[10px] font-black uppercase outline-none">
                     <option value="all">TODOS</option>
                 </select>
-
-                <button onclick="goToday()" class="px-4 py-2 text-xs font-bold uppercase border border-slate-200 rounded-lg">Hoje</button>
-                
-                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                    <button onclick="changeWeek(-1)" class="font-bold">◀</button>
-                    <span id="week-label" class="text-xs font-black uppercase font-mono"></span>
-                    <button onclick="changeWeek(1)" class="font-bold">▶</button>
+                <button onclick="goToday()" class="px-3 py-2 text-[10px] font-bold uppercase border border-slate-200 rounded-lg">Hoje</button>
+                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
+                    <button onclick="changeWeek(-1)" class="p-1">◀</button>
+                    <span id="week-label" class="text-[10px] font-black font-mono"></span>
+                    <button onclick="changeWeek(1)" class="p-1">▶</button>
                 </div>
             </div>
         </div>
@@ -90,14 +129,13 @@
         const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
         function getMonday(d) {
-            d = new Date(d); 
+            d = new Date(d);
             let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
             return new Date(d.setDate(diff));
         }
 
-        function goToday() { currentMonday = getMonday(new Date()); loadData(); }
-
         async function loadData() {
+            document.getElementById('loader').style.opacity = '1';
             document.getElementById('loader').style.display = 'flex';
             try {
                 const resp = await fetch(SCRIPT_URL);
@@ -105,7 +143,8 @@
                 populateFilter();
                 render();
             } catch (e) { console.error(e); }
-            document.getElementById('loader').style.display = 'none';
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 300);
         }
 
         function populateFilter() {
@@ -120,14 +159,6 @@
             select.value = currentVal;
         }
 
-        function applyFilter() {
-            const val = document.getElementById('driver-filter').value;
-            document.querySelectorAll('.driver-column').forEach(col => {
-                col.style.display = (val === 'all' || col.getAttribute('data-motorista') === val) ? 'block' : 'none';
-            });
-            equalizeHeights();
-        }
-
         function render() {
             const board = document.getElementById('board');
             board.innerHTML = '';
@@ -140,57 +171,81 @@
                 col.className = "driver-column";
                 col.setAttribute('data-motorista', mot);
                 
-                let html = `<div class="p-6 font-black text-center border-b border-slate-100 uppercase text-2xl sticky top-0 bg-white z-20">${mot}</div>`;
+                let html = `<div class="driver-title">${mot}</div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const ds = formatDate(d);
-                    const dWeek = weekDays[d.getDay()]; // Obtém SEG, TER, etc.
+                    const dWeek = weekDays[d.getDay()];
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
                     
                     const rowColor = i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40';
                     const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
 
                     html += `
-                        <div class="day-cell ${isToday ? 'bg-blue-50/50' : rowColor}" id="day-${i}-${mot.replace(/\s+/g, '')}">
-                            <div class="mb-4">
-                                <span class="text-xl font-black uppercase tracking-tight ${isToday ? 'text-blue-600' : 'text-slate-400'}">
-                                    ${dWeek}, ${ds} ${isToday ? '• HOJE' : ''}
-                                </span>
+                        <div class="day-cell ${isToday ? 'bg-blue-50/60' : rowColor}" data-day-index="${i}">
+                            <div class="day-label ${isToday ? 'text-blue-600' : 'text-slate-400'}">
+                                ${dWeek}, ${ds}
                             </div>
-                            <div class="flex-grow space-y-3">
+                            <div class="services-container space-y-2">
                                 ${services.length > 0 ? services.map(s => `
                                     <div class="service-bubble">
-                                        <div class="text-[10px] font-black text-blue-600 uppercase mb-1">${s.viatura || ''}</div>
-                                        <div class="text-sm font-bold text-slate-800">${s.servico}</div>
-                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[11px] font-mono text-slate-400 font-bold"># ${s.nei}</div>` : ''}
+                                        <div class="text-[9px] font-black text-blue-600 uppercase mb-1">${s.viatura || ''}</div>
+                                        <div class="servico-desc font-bold text-slate-800">${s.servico}</div>
+                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[10px] font-mono text-slate-400 font-bold"># ${s.nei}</div>` : ''}
                                     </div>
-                                `).join('') : '<div class="text-[10px] font-bold text-slate-200 uppercase">Sem planeamento</div>'}
+                                `).join('') : '<div class="text-[10px] font-bold text-slate-200 uppercase py-2">Sem serviço</div>'}
                             </div>
                         </div>`;
                 }
                 col.innerHTML = html;
                 board.appendChild(col);
             });
-            applyFilter();
+            
+            // Forçar nivelamento após renderizar
+            setTimeout(equalizeHeights, 100);
         }
 
         function equalizeHeights() {
-            if(window.innerWidth < 768) return;
-            setTimeout(() => {
+            // No mobile, se estivermos a ver "TODOS", nivelamos. Se filtrarmos 1, resetamos.
+            const filterValue = document.getElementById('driver-filter').value;
+            const visibleCols = document.querySelectorAll('.driver-column:not([style*="display: none"])');
+            
+            // Resetar alturas primeiro
+            document.querySelectorAll('.day-cell').forEach(c => c.style.height = 'auto');
+
+            if (visibleCols.length > 1) {
                 for (let i = 0; i < 7; i++) {
                     let maxHeight = 0;
-                    const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);
-                    dayCells.forEach(cell => {
-                        cell.style.height = 'auto';
-                        if (cell.parentElement.style.display !== 'none' && cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
+                    // Selecionar células do dia 'i' apenas das colunas visíveis
+                    const dayCells = [];
+                    visibleCols.forEach(col => {
+                        const cell = col.querySelector(`[data-day-index="${i}"]`);
+                        if (cell) {
+                            dayCells.push(cell);
+                            if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
+                        }
                     });
-                    dayCells.forEach(cell => { if (maxHeight > 0) cell.style.height = maxHeight + 'px'; });
+                    // Aplicar a altura máxima a todas as células desse dia
+                    dayCells.forEach(cell => cell.style.height = maxHeight + 'px');
                 }
-            }, 100);
+            }
         }
 
+        window.applyFilter = function() {
+            const val = document.getElementById('driver-filter').value;
+            document.querySelectorAll('.driver-column').forEach(col => {
+                col.style.display = (val === 'all' || col.getAttribute('data-motorista') === val) ? 'block' : 'none';
+            });
+            equalizeHeights();
+        }
+
+        window.goToday = function() { currentMonday = getMonday(new Date()); loadData(); }
         window.changeWeek = function(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
+        
+        // Ajustar nivelamento se rodar o telemóvel (mudança de orientação)
+        window.addEventListener('resize', equalizeHeights);
+
         loadData();
     </script>
 </body>
