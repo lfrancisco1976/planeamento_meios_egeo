@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planeamento de Frota</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .grid-planning {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .scroll-x { overflow-x: auto; white-space: nowrap; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <nav class="bg-blue-600 text-white p-4 rounded-lg mb-6 flex justify-between items-center shadow-lg">
+        <h1 class="text-xl font-bold">Logística Pro-Map</h1>
+        <button onclick="toggleSettings()" class="bg-blue-800 px-4 py-2 rounded hover:bg-blue-700">Definições</button>
+    </nav>
+
+    <div id="main-grid" class="flex gap-4 overflow-x-auto pb-4">
+        </div>
+
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-2xl shadow-2xl">
+            <h2 class="text-xl font-bold mb-4">Configurações</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-semibold">Motoristas (um por linha)</h3>
+                    <textarea id="list-drivers" class="w-full border p-2 h-32">Motorista 1&#10;Motorista 2&#10;Motorista 3</textarea>
+                </div>
+                <div>
+                    <h3 class="font-semibold">Tratores / Reboques</h3>
+                    <textarea id="list-trucks" class="w-full border p-2 h-32">T-01&#10;T-02</textarea>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button onclick="saveSettings()" class="bg-green-600 text-white px-6 py-2 rounded">Guardar e Recarregar</button>
+                <button onclick="toggleSettings()" class="bg-gray-400 text-white px-6 py-2 rounded">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados iniciais (serão salvos no LocalStorage do navegador)
+        let config = JSON.parse(localStorage.getItem('fleetConfig')) || {
+            drivers: ['Motorista 1', 'Motorista 2', 'Motorista 3'],
+            trucks: ['T-01', 'T-02'],
+            trailers: ['R-01', 'R-02']
+        };
+
+        const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+        function init() {
+            const container = document.getElementById('main-grid');
+            container.innerHTML = '';
+            
+            config.drivers.forEach(driver => {
+                let driverCol = `<div class="min-w-[350px] bg-white rounded shadow-md p-3 border-t-4 border-blue-500">
+                    <h2 class="text-lg font-bold text-center mb-4 bg-gray-50 py-2 border-b">${driver}</h2>`;
+                
+                days.forEach(day => {
+                    driverCol += `
+                        <div class="mb-4 p-2 border rounded bg-gray-50" id="day-${driver}-${day}">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-sm text-blue-800">${day}</span>
+                                <button onclick="addRow('${driver}', '${day}')" class="text-xs bg-green-500 text-white px-2 py-1 rounded">+ Serviço</button>
+                            </div>
+                            <div id="rows-${driver}-${day}"></div>
+                        </div>`;
+                });
+                
+                driverCol += `</div>`;
+                container.innerHTML += driverCol;
+            });
+        }
+
+        function addRow(driver, day) {
+            const container = document.getElementById(`rows-${driver}-${day}`);
+            const rowCount = container.children.length;
+            
+            if (rowCount >= 15) return alert("Limite de 15 serviços atingido!");
+
+            const row = document.createElement('div');
+            row.className = "flex flex-col gap-1 mb-3 p-2 bg-white border rounded shadow-sm relative group";
+            row.innerHTML = `
+                <div class="flex gap-1">
+                    <select class="text-xs border p-1 w-1/2" name="trator">${config.trucks.map(t => `<option>${t}</option>`).join('')}</select>
+                    <select class="text-xs border p-1 w-1/2" name="reboque">${config.trucks.map(t => `<option>${t}</option>`).join('')}</select>
+                </div>
+                <input type="text" placeholder="Serviço" class="text-xs border p-1" name="servico">
+                <input type="text" placeholder="NEI" class="text-xs border p-1 font-mono" name="nei">
+                <div class="flex gap-2 mt-1">
+                    <button onclick="submitToSheet(this, '${driver}', '${day}')" class="bg-blue-500 text-white text-[10px] px-2 py-1 rounded flex-1">Gravar</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 text-xs px-1">✕</button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        async function submitToSheet(btn, driver, day) {
+            const row = btn.parentElement.parentElement;
+            const data = {
+                dia: day,
+                motorista: driver,
+                viatura: row.querySelector('[name="trator"]').value + " / " + row.querySelector('[name="reboque"]').value,
+                servico: row.querySelector('[name="servico"]').value,
+                nei: row.querySelector('[name="nei"]').value
+            };
+
+            btn.disabled = true;
+            btn.innerText = "A gravar...";
+
+            // URL do seu Google Apps Script (passo abaixo)
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzubYZbc22vbSl9Dj9XuXktUxZxCMl9UuYA9cc1ymHbF9Wq0mnm2frsVr0BES3wh2Qk/exec';
+
+            try {
+                await fetch(scriptURL, { 
+                    method: 'POST', 
+                    mode: 'no-cors',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data) 
+                });
+                btn.className = "bg-gray-400 text-white text-[10px] px-2 py-1 rounded flex-1";
+                btn.innerText = "Gravado ✓";
+            } catch (e) {
+                alert("Erro ao gravar!");
+                btn.disabled = false;
+                btn.innerText = "Gravar";
+            }
+        }
+
+        function toggleSettings() {
+            document.getElementById('settings-modal').classList.toggle('hidden');
+        }
+
+        function saveSettings() {
+            config.drivers = document.getElementById('list-drivers').value.split('\n').filter(x => x.trim());
+            config.trucks = document.getElementById('list-trucks').value.split('\n').filter(x => x.trim());
+            localStorage.setItem('fleetConfig', JSON.stringify(config));
+            location.reload();
+        }
+
+        init();
+    </script>
+</body>
+</html>
