@@ -224,25 +224,25 @@
                                             </div>
                                         ` : ''}
                                     </div>`;
-                                }).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center flex-grow"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
+                                }).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center flex-grow min-h-[60px]"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
                             </div>
                         </div>`;
                 }
                 col.innerHTML = html;
                 board.appendChild(col);
             });
-            setTimeout(equalizeHeights, 200);
+            // Tempo ligeiramente superior para garantir renderização correta das fontes e bolhas
+            setTimeout(equalizeHeights, 300);
         }
 
         function equalizeHeights() {
-            // Resetar alturas para cálculo limpo
             const dayCards = document.querySelectorAll('.day-card');
             dayCards.forEach(c => c.style.height = 'auto');
 
             const visibleCols = document.querySelectorAll('.driver-column:not([style*="display: none"])');
             
-            // Só nivelamos se houver mais do que uma coluna visível (Desktop/Tablet)
-            if (visibleCols.length > 1) {
+            // Nivelamento ativado para todos os layouts (Mobile e PC)
+            if (visibleCols.length > 0) {
                 for (let i = 0; i < 7; i++) {
                     let maxHeight = 0;
                     const dayGroup = [];
@@ -267,7 +267,6 @@
             document.querySelectorAll('.driver-column').forEach(col => {
                 col.style.display = (val === 'all' || col.getAttribute('data-motorista') === val) ? 'block' : 'none';
             });
-            // Importante: re-nivelar após filtrar
             equalizeHeights();
             document.getElementById('board').scrollLeft = 0;
         }
