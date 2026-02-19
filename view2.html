@@ -8,9 +8,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
-        :root {
-            --brand-blue: #2563eb;
-        }
+        :root { --brand-blue: #2563eb; }
 
         body { 
             font-family: 'Inter', sans-serif; 
@@ -19,7 +17,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Scroll suave e moderno */
         .board-wrapper {
             display: flex;
             overflow-x: auto;
@@ -36,13 +33,9 @@
         }
 
         @media (max-width: 768px) {
-            .driver-column { 
-                min-width: 92vw;
-                padding: 0 0.5rem;
-            }
+            .driver-column { min-width: 92vw; padding: 0 0.5rem; }
         }
 
-        /* Cabeçalho do Motorista */
         .driver-card-header {
             background: white;
             padding: 1.5rem 1rem;
@@ -55,7 +48,6 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
         }
 
-        /* Cartão de Dia */
         .day-card {
             background: white;
             padding: 1.25rem;
@@ -65,43 +57,27 @@
             transition: all 0.2s ease;
         }
 
-        .day-card:last-child {
-            border-radius: 0 0 1.25rem 1.25rem;
-        }
+        .day-card:last-child { border-radius: 0 0 1.25rem 1.25rem; }
+        .is-today-card { background: #f8faff; border-left: 4px solid var(--brand-blue) !important; }
 
-        .is-today-card {
-            background: #f8faff;
-            border-left: 4px solid var(--brand-blue) !important;
-        }
-
-        /* Bolha de Serviço */
         .service-entry {
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 0.85rem;
             padding: 1rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            position: relative;
         }
 
         .status-dot {
-            height: 8px;
-            width: 8px;
+            height: 8px; width: 8px;
             background-color: var(--brand-blue);
             border-radius: 50%;
             display: inline-block;
             margin-right: 6px;
         }
 
-        /* Custom Scrollbar */
         .board-wrapper::-webkit-scrollbar { height: 6px; }
-        .board-wrapper::-webkit-scrollbar-track { background: transparent; }
         .board-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        .loader-dots div {
-            animation: cubic-bezier(0, 0.5, 0.5, 1) 1.2s infinite;
-        }
-        @keyframes dots { 0% { opacity: 1; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -113,7 +89,7 @@
                 <div class="w-3 h-3 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                 <div class="w-3 h-3 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
             </div>
-            <p class="text-xs font-black uppercase tracking-widest text-slate-500">Sincronizando Frota</p>
+            <p class="text-xs font-black uppercase tracking-widest text-slate-500">A carregar dados...</p>
         </div>
     </div>
 
@@ -131,19 +107,17 @@
                             <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Consulta Live</p>
                         </div>
                     </div>
-                    <button onclick="loadData()" class="md:hidden p-2 bg-slate-100 rounded-full text-slate-600">
+                    <button onclick="loadData()" class="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
                 </div>
 
-                <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-                    <div class="relative min-w-[140px]">
-                        <select id="driver-filter" onchange="applyFilter()" class="appearance-none w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">Filtro: Todos</option>
-                        </select>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <select id="driver-filter" onchange="applyFilter()" class="appearance-none bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">Filtro: Todos</option>
+                    </select>
 
-                    <div class="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                    <div class="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm ml-auto">
                         <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-50 rounded-lg transition">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
@@ -152,8 +126,6 @@
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                     </div>
-
-                    <button onclick="goToday()" class="hidden md:block px-4 py-2.5 bg-slate-800 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-slate-700 transition shadow-lg shadow-slate-200">Hoje</button>
                 </div>
             </div>
         </div>
@@ -163,22 +135,22 @@
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvZ6RDtubzNKAbm0MqyJLVLq6E6x1CdZBtoNhl9OTf3FKImo3lPGdHpSfMoKdr0l-2/exec';
+        
+        function getMonday(d) {
+            d = new Date(d); d.setHours(0,0,0,0);
+            let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
         let currentMonday = getMonday(new Date());
         let appData = { motoristas: [], historico: [] };
 
         const weekDays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
         const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-        function getMonday(d) {
-            d = new Date(d);
-            let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
-        }
-
         async function loadData() {
             const loader = document.getElementById('loader');
-            loader.style.display = 'flex';
-            loader.classList.remove('opacity-0');
+            loader.style.display = 'flex'; loader.classList.remove('opacity-0');
             try {
                 const resp = await fetch(SCRIPT_URL);
                 appData = await resp.json();
@@ -204,7 +176,6 @@
         function render() {
             const board = document.getElementById('board');
             board.innerHTML = '';
-            
             const formatDate = (date) => `${date.getDate()} ${months[date.getMonth()]}`;
             document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(new Date(new Date(currentMonday).setDate(currentMonday.getDate() + 6)))}`;
 
@@ -216,28 +187,21 @@
                 let html = `
                     <div class="driver-card-header">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold">
-                                ${mot.charAt(0)}
-                            </div>
+                            <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold">${mot.charAt(0)}</div>
                             <h2 class="text-lg font-black text-slate-800 tracking-tight">${mot}</h2>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 
                 for(let i=0; i<7; i++) {
                     const d = new Date(currentMonday); d.setDate(d.getDate() + i);
                     const ds = `${d.getDate()}/${months[d.getMonth()]}`;
-                    const dFull = weekDays[d.getDay()];
                     const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
-                    
                     const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
 
                     html += `
                         <div class="day-card ${isToday ? 'is-today-card' : ''}" data-day-index="${i}">
                             <div class="flex justify-between items-baseline mb-3">
-                                <span class="text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-blue-600' : 'text-slate-400'}">
-                                    ${dFull}
-                                </span>
+                                <span class="text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-blue-600' : 'text-slate-400'}">${weekDays[d.getDay()]}</span>
                                 <span class="text-xs font-bold text-slate-400">${ds}</span>
                             </div>
                             <div class="space-y-3">
@@ -245,20 +209,16 @@
                                     <div class="service-entry">
                                         <div class="flex items-center mb-1">
                                             <span class="status-dot"></span>
-                                            <span class="text-[9px] font-black text-blue-600 uppercase tracking-tighter">${s.viatura || 'Viatura s/ ref'}</span>
+                                            <span class="text-[11px] font-extrabold text-blue-600 uppercase tracking-tighter">${s.viatura || 'S/ REF'}</span>
                                         </div>
                                         <div class="text-sm font-semibold text-slate-700 leading-tight mb-2">${s.servico}</div>
                                         ${s.nei && s.nei !== '---' ? `
                                             <div class="inline-flex items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                                <span class="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-tighter">NEI: ${s.nei}</span>
+                                                <span class="text-[11px] font-mono font-black text-slate-500"> ${s.nei}</span>
                                             </div>
                                         ` : ''}
                                     </div>
-                                `).join('') : `
-                                    <div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center">
-                                        <span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço atribuído</span>
-                                    </div>
-                                `}
+                                `).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
                             </div>
                         </div>`;
                 }
@@ -271,17 +231,13 @@
         function equalizeHeights() {
             const visibleCols = document.querySelectorAll('.driver-column:not([style*="display: none"])');
             document.querySelectorAll('.day-card').forEach(c => c.style.height = 'auto');
-
             if (window.innerWidth > 768 && visibleCols.length > 1) {
                 for (let i = 0; i < 7; i++) {
                     let maxHeight = 0;
                     const dayCells = [];
                     visibleCols.forEach(col => {
                         const cell = col.querySelector(`[data-day-index="${i}"]`);
-                        if (cell) {
-                            dayCells.push(cell);
-                            if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
-                        }
+                        if (cell) { dayCells.push(cell); if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight; }
                     });
                     dayCells.forEach(cell => cell.style.height = maxHeight + 'px');
                 }
@@ -294,14 +250,11 @@
                 col.style.display = (val === 'all' || col.getAttribute('data-motorista') === val) ? 'block' : 'none';
             });
             equalizeHeights();
-            // Scroll para o início ao filtrar
             document.getElementById('board').scrollLeft = 0;
         }
 
-        window.goToday = function() { currentMonday = getMonday(new Date()); loadData(); }
         window.changeWeek = function(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
         window.addEventListener('resize', equalizeHeights);
-
         loadData();
     </script>
 </body>
