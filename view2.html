@@ -205,20 +205,28 @@
                                 <span class="text-xs font-bold text-slate-400">${ds}</span>
                             </div>
                             <div class="space-y-3">
-                                ${services.length > 0 ? services.map(s => `
+                                ${services.length > 0 ? services.map(s => {
+                                    // Limpeza e verificação da matrícula
+                                    const viaturaLimpa = s.viatura ? s.viatura.replace('/', '').trim() : '';
+                                    const temViatura = viaturaLimpa !== '' && viaturaLimpa !== '---';
+
+                                    return `
                                     <div class="service-entry">
+                                        ${temViatura ? `
                                         <div class="flex items-center mb-1">
                                             <span class="status-dot"></span>
-                                            <span class="text-[11px] font-extrabold text-blue-600 uppercase tracking-tighter">${s.viatura || 'S/ REF'}</span>
-                                        </div>
+                                            <span class="text-[11px] font-extrabold text-blue-600 uppercase tracking-tighter">${s.viatura}</span>
+                                        </div>` : ''}
+                                        
                                         <div class="text-sm font-semibold text-slate-700 leading-tight mb-2">${s.servico}</div>
+                                        
                                         ${s.nei && s.nei !== '---' ? `
                                             <div class="inline-flex items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                                <span class="text-[11px] font-mono font-black text-slate-500"> ${s.nei}</span>
+                                                <span class="text-[11px] font-mono font-black text-slate-500"># ${s.nei}</span>
                                             </div>
                                         ` : ''}
-                                    </div>
-                                `).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
+                                    </div>`;
+                                }).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
                             </div>
                         </div>`;
                 }
