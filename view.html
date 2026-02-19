@@ -20,10 +20,11 @@
         .is-today-card { background: #f8faff; border-left: 4px solid var(--brand-blue) !important; }
 
         .service-entry { background: white; border: 1px solid #e2e8f0; border-radius: 0.85rem; padding: 0.75rem; transition: all 0.2s; position: relative; }
-        .service-entry:hover { border-color: #cbd5e1; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
         
-        .action-btn { transition: all 0.2s; display: flex; items-center; justify-center; border-radius: 0.5rem; }
-        .action-btn:hover { transform: scale(1.1); }
+        /* Modal Styles */
+        #modal-overlay { display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 500; }
+        .modal-content { transition: transform 0.3s ease-out; }
+        @media (max-width: 768px) { .modal-content { border-radius: 1.5rem 1.5rem 0 0; width: 100%; bottom: 0; position: fixed; } }
 
         .board-wrapper::-webkit-scrollbar { height: 6px; }
         .board-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -38,7 +39,40 @@
                 <div class="w-3 h-3 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                 <div class="w-3 h-3 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
             </div>
-            <p class="text-xs font-black uppercase tracking-widest text-slate-500">A processar...</p>
+            <p class="text-xs font-black uppercase tracking-widest text-slate-500">A carregar...</p>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-md shadow-2xl overflow-hidden rounded-2xl">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="modal-title" class="text-sm font-black uppercase tracking-widest text-slate-700">Novo Serviço</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+            <form id="service-form" class="p-6 space-y-4">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="service-date">
+                <input type="hidden" id="service-driver">
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Matrícula</label>
+                    <input type="text" id="input-viatura" placeholder="00-XX-00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Serviço / Descrição</label>
+                    <textarea id="input-servico" rows="2" placeholder="Ex: Carga de Resíduos..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Encomenda (Opcional)</label>
+                    <input type="text" id="input-nei" placeholder="Ex: 12345" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs py-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+                    Guardar Alterações
+                </button>
+            </form>
         </div>
     </div>
 
@@ -47,24 +81,21 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="bg-slate-800 p-2 rounded-lg shadow-lg">
-                            <span class="text-white text-xl">⚙️</span>
-                        </div>
+                        <div class="bg-slate-800 p-2 rounded-lg shadow-lg"><span class="text-white text-xl">⚙️</span></div>
                         <div>
                             <h1 class="text-lg font-black tracking-tight text-slate-800 leading-none">EGEO - GESTÃO</h1>
-                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Modo de Edição</p>
+                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Painel de Controlo</p>
                         </div>
                     </div>
                     <button onclick="loadData()" class="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <select id="driver-filter" onchange="applyFilter()" class="appearance-none bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="all">Filtrar Motorista</option>
+                        <option value="all">Todos os Motoristas</option>
                     </select>
-
                     <div class="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm ml-auto">
                         <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-50 rounded-lg transition"><svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                         <span id="week-label" class="text-[10px] font-black font-mono px-3 text-slate-600 min-w-[100px] text-center"></span>
@@ -128,7 +159,7 @@
                 col.setAttribute('data-motorista', mot);
                 
                 let html = `
-                    <div class="driver-card-header flex justify-between items-center">
+                    <div class="driver-card-header">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">${mot.charAt(0)}</div>
                             <h2 class="text-md font-black text-slate-800 tracking-tight">${mot}</h2>
@@ -145,7 +176,7 @@
                         <div class="day-card ${isToday ? 'is-today-card' : ''}" data-day-index="${i}">
                             <div class="flex justify-between items-center mb-3">
                                 <span class="text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-blue-600' : 'text-slate-400'}">${weekDays[d.getDay()]}</span>
-                                <button onclick="openAdd('${mot}', '${ds}')" class="text-blue-600 hover:bg-blue-50 p-1 rounded-md transition">
+                                <button onclick="openAdd('${mot}', '${ds}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition active:scale-90">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2.5" stroke-linecap="round"/></svg>
                                 </button>
                             </div>
@@ -154,17 +185,17 @@
                                     const temViatura = s.viatura && s.viatura.trim() !== '' && s.viatura !== '---';
                                     return `
                                     <div class="service-entry group">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <div class="flex-grow">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-grow pr-2">
                                                 ${temViatura ? `<div class="text-[11px] font-extrabold text-blue-600 uppercase mb-0.5">${s.viatura}</div>` : ''}
                                                 <div class="text-sm font-semibold text-slate-700 leading-tight">${s.servico}</div>
                                                 ${s.nei && s.nei !== '---' ? `<div class="text-[11px] font-mono font-black text-slate-400 mt-1">${s.nei}</div>` : ''}
                                             </div>
-                                            <div class="flex flex-col gap-1 ml-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onclick="openEdit('${s.id}')" class="action-btn p-1.5 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white">
+                                            <div class="flex flex-col gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onclick='openEdit(${JSON.stringify(s)})' class="p-2 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all shadow-sm border border-slate-100">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                                 </button>
-                                                <button onclick="confirmDelete('${s.id}')" class="action-btn p-1.5 bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white">
+                                                <button onclick="confirmDelete('${s.id}')" class="p-2 bg-slate-50 text-slate-400 hover:bg-red-600 hover:text-white rounded-lg transition-all shadow-sm border border-slate-100">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                                 </button>
                                             </div>
@@ -179,6 +210,61 @@
                 board.appendChild(col);
             });
             setTimeout(equalizeHeights, 300);
+        }
+
+        // LÓGICA DO MODAL
+        const modal = document.getElementById('modal-overlay');
+        const form = document.getElementById('service-form');
+
+        function openAdd(driver, date) {
+            form.reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('service-driver').value = driver;
+            document.getElementById('service-date').value = date;
+            document.getElementById('modal-title').innerText = `Novo: ${driver} (${date})`;
+            modal.style.display = 'flex';
+        }
+
+        function openEdit(service) {
+            form.reset();
+            document.getElementById('edit-id').value = service.id;
+            document.getElementById('service-driver').value = service.motorista;
+            document.getElementById('service-date').value = service.data;
+            document.getElementById('input-viatura').value = service.viatura === '---' ? '' : service.viatura;
+            document.getElementById('input-servico').value = service.servico;
+            document.getElementById('input-nei').value = service.nei === '---' ? '' : service.nei;
+            document.getElementById('modal-title').innerText = `Editar: ${service.motorista}`;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { modal.style.display = 'none'; }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                id: document.getElementById('edit-id').value,
+                motorista: document.getElementById('service-driver').value,
+                data: document.getElementById('service-date').value,
+                viatura: document.getElementById('input-viatura').value || '---',
+                servico: document.getElementById('input-servico').value,
+                nei: document.getElementById('input-nei').value || '---'
+            };
+            
+            closeModal();
+            document.getElementById('loader').style.display = 'flex';
+            
+            console.log("A enviar dados:", data);
+            // Aqui deves fazer o fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify(data)})
+            // Por agora, vamos simular o sucesso:
+            setTimeout(() => { loadData(); }, 1000);
+        };
+
+        function confirmDelete(id) {
+            if(confirm('Deseja eliminar este registo?')) {
+                console.log("A apagar ID:", id);
+                // Lógica de delete aqui
+                loadData();
+            }
         }
 
         function equalizeHeights() {
@@ -196,11 +282,6 @@
                 }
             }
         }
-
-        // Funções de Ação (Substituir pela tua lógica de Modal/API)
-        function openAdd(motorista, data) { alert(`Adicionar serviço para ${motorista} em ${data}`); }
-        function openEdit(id) { alert(`Editar serviço ID: ${id}`); }
-        function confirmDelete(id) { if(confirm('Remover este serviço?')) alert(`A apagar ${id}...`); }
 
         window.applyFilter = function() {
             const val = document.getElementById('driver-filter').value;
