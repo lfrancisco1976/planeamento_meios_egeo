@@ -27,7 +27,7 @@
 
         .driver-column {
             min-width: 420px;
-            flex: 0 0 auto;
+            flex: 1 0 auto;
             scroll-snap-align: start;
             padding: 0 0.75rem;
         }
@@ -54,7 +54,9 @@
             border-left: 1px solid #e2e8f0;
             border-right: 1px solid #e2e8f0;
             border-bottom: 1px solid #e2e8f0;
-            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
 
         .day-card:last-child { border-radius: 0 0 1.25rem 1.25rem; }
@@ -206,10 +208,8 @@
                             </div>
                             <div class="space-y-3">
                                 ${services.length > 0 ? services.map(s => {
-                                    // Limpeza e verificação da matrícula
                                     const viaturaLimpa = s.viatura ? s.viatura.replace('/', '').trim() : '';
                                     const temViatura = viaturaLimpa !== '' && viaturaLimpa !== '---';
-
                                     return `
                                     <div class="service-entry">
                                         ${temViatura ? `
@@ -217,37 +217,47 @@
                                             <span class="status-dot"></span>
                                             <span class="text-[11px] font-extrabold text-blue-600 uppercase tracking-tighter">${s.viatura}</span>
                                         </div>` : ''}
-                                        
                                         <div class="text-sm font-semibold text-slate-700 leading-tight mb-2">${s.servico}</div>
-                                        
                                         ${s.nei && s.nei !== '---' ? `
                                             <div class="inline-flex items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                                <span class="text-[11px] font-mono font-black text-slate-500"> ${s.nei}</span>
+                                                <span class="text-[11px] font-mono font-black text-slate-500">${s.nei}</span>
                                             </div>
                                         ` : ''}
                                     </div>`;
-                                }).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
+                                }).join('') : `<div class="py-2 border-2 border-dashed border-slate-100 rounded-xl flex items-center justify-center flex-grow"><span class="text-[9px] font-bold text-slate-300 uppercase">Sem serviço</span></div>`}
                             </div>
                         </div>`;
                 }
                 col.innerHTML = html;
                 board.appendChild(col);
             });
-            setTimeout(equalizeHeights, 150);
+            setTimeout(equalizeHeights, 200);
         }
 
         function equalizeHeights() {
+            // Resetar alturas para cálculo limpo
+            const dayCards = document.querySelectorAll('.day-card');
+            dayCards.forEach(c => c.style.height = 'auto');
+
             const visibleCols = document.querySelectorAll('.driver-column:not([style*="display: none"])');
-            document.querySelectorAll('.day-card').forEach(c => c.style.height = 'auto');
-            if (window.innerWidth > 768 && visibleCols.length > 1) {
+            
+            // Só nivelamos se houver mais do que uma coluna visível (Desktop/Tablet)
+            if (visibleCols.length > 1) {
                 for (let i = 0; i < 7; i++) {
                     let maxHeight = 0;
-                    const dayCells = [];
+                    const dayGroup = [];
+
                     visibleCols.forEach(col => {
-                        const cell = col.querySelector(`[data-day-index="${i}"]`);
-                        if (cell) { dayCells.push(cell); if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight; }
+                        const card = col.querySelector(`[data-day-index="${i}"]`);
+                        if (card) {
+                            dayGroup.push(card);
+                            if (card.offsetHeight > maxHeight) maxHeight = card.offsetHeight;
+                        }
                     });
-                    dayCells.forEach(cell => cell.style.height = maxHeight + 'px');
+
+                    dayGroup.forEach(card => {
+                        card.style.height = maxHeight + 'px';
+                    });
                 }
             }
         }
@@ -257,6 +267,7 @@
             document.querySelectorAll('.driver-column').forEach(col => {
                 col.style.display = (val === 'all' || col.getAttribute('data-motorista') === val) ? 'block' : 'none';
             });
+            // Importante: re-nivelar após filtrar
             equalizeHeights();
             document.getElementById('board').scrollLeft = 0;
         }
