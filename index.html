@@ -4,270 +4,384 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EGEO - TA | Gestão de Frota</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+                
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #334155; 
+        }
+
+        .board-wrapper { 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 0; 
+        }
+
+        .driver-column {            
+            min-width: 380px;            
+            flex: 1;            
+            background: white;            
+            border-right: 1px solid #e2e8f0;        
+        }
+
+        @media (max-width: 768px) { 
+            .driver-column { min-width: 85vw; } 
+        }
+
+        .day-cell {            
+            padding: 1.5rem 1.25rem;            
+            border-bottom: 1px solid #e2e8f0;            
+            display: flex;            
+            flex-direction: column;            
+            border-left: 4px solid transparent;        
+        }
+
+        /* Cores de Estado das Células Diárias */        
+        .bg-normal { 
+            background-color: #ffffff !important; 
+            border-left-color: #e2e8f0; 
+        }        
         
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
-
-        .board-wrapper { display: flex; overflow-x: auto; gap: 0; }
-
-        .driver-column {
-            min-width: 380px;
-            flex: 1;
-            background: white;
-            border-right: 1px solid #e2e8f0;
-        }
-
-        @media (max-width: 768px) { .driver-column { min-width: 85vw; } }
-
-        .day-cell {
-            padding: 1.5rem 1.25rem;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            border-left: 4px solid transparent;
-        }
-
-        /* Cores Alternadas Suaves */
-        .bg-alt { background-color: #f8fafc !important; border-left-color: #cbd5e1; }
-        .bg-normal { background-color: #ffffff !important; border-left-color: #e2e8f0; }
-        .bg-today { background-color: #f0f7ff !important; border-left-color: #3b82f6; }
-
-        .driver-header {
-            padding: 1.25rem;
-            background: #f1f5f9;
-            color: #1e293b;
-            font-weight: 800;
-            text-align: center;
-            text-transform: uppercase;
-            font-size: 1.25rem; /* Nome do motorista mais contido */
-            letter-spacing: -0.5px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .service-bubble {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 0.85rem;
-            margin-bottom: 0.5rem;
-            transition: transform 0.1s;
-        }
+        .bg-alt { 
+            background-color: #f8fafc !important; 
+            border-left-color: #cbd5e1; 
+        }        
         
-        .service-bubble:hover { border-color: #3b82f6; }
-
-        .btn-plus {
-            width: 32px;
-            height: 32px;
-            background: #f1f5f9;
-            color: #64748b;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: all 0.2s;
+        .bg-today { 
+            background-color: #f0f7ff !important; 
+            border-left-color: #3b82f6; 
         }
-        .btn-plus:hover { background: #3b82f6; color: white; }
+
+        .bg-feriado { 
+            background-color: #fef2f2 !important; 
+            border-left-color: #ef4444 !important; 
+        }
+
+        .bg-ferias { 
+            background-color: #f0fdf4 !important; 
+            border-left-color: #22c55e !important; 
+        }
+
+        .driver-header {            
+            padding: 1.25rem;            
+            background: #f1f5f9;            
+            color: #1e293b;            
+            font-weight: 800;            
+            text-align: center;            
+            text-transform: uppercase;            
+            font-size: 1.25rem;            
+            letter-spacing: -0.5px;            
+            position: sticky;            
+            top: 0;            
+            z-index: 50;            
+            border-bottom: 1px solid #e2e8f0;        
+        }
+
+        .service-bubble {            
+            background: white;            
+            border: 1px solid #e2e8f0;            
+            border-radius: 0.75rem;            
+            padding: 0.85rem;            
+            margin-bottom: 0.5rem;            
+            transition: transform 0.1s;        
+        }                
+        
+        .service-bubble:hover { 
+            border-color: #3b82f6; 
+        }
+
+        .btn-plus {            
+            width: 32px;            
+            height: 32px;            
+            background: #f1f5f9;            
+            color: #64748b;            
+            border-radius: 8px;            
+            display: flex;            
+            align-items: center;            
+            justify-content: center;            
+            font-size: 1.2rem;            
+            transition: all 0.2s;        
+        }        
+        
+        .btn-plus:hover { 
+            background: #3b82f6; 
+            color: white; 
+        }
     </style>
 </head>
 <body>
 
-    <div id="loader" class="fixed inset-0 bg-white/80 z-[2000] hidden flex flex-col items-center justify-center backdrop-blur-sm">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div id="loader" class="fixed inset-0 bg-white/80 z-[2000] hidden flex flex-col items-center justify-center backdrop-blur-sm">        
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>    
     </div>
 
-    <header class="bg-white border-b border-slate-200 p-4 sticky top-0 z-[100]">
-        <div class="max-w-[2500px] mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">🚛</span>
-                <h1 class="text-xl font-extrabold tracking-tight text-slate-800">EGEO - TA</h1>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-4 bg-slate-100 px-4 py-2 rounded-xl">
-                    <button onclick="changeWeek(-1)" class="font-bold text-slate-400 hover:text-slate-900">◀</button>
-                    <span id="week-label" class="text-[11px] font-bold uppercase tracking-tighter font-mono"></span>
-                    <button onclick="changeWeek(1)" class="font-bold text-slate-400 hover:text-slate-900">▶</button>
-                </div>
-                <button onclick="loadData()" class="bg-slate-800 text-white px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-slate-700">↻</button>
-            </div>
-        </div>
+    <header class="bg-white border-b border-slate-200 p-4 sticky top-0 z-[100]">        
+        <div class="max-w-[2500px] mx-auto flex justify-between items-center">            
+            <div class="flex items-center gap-3">                
+                <span class="text-2xl">🚛</span>                
+                <h1 class="text-xl font-extrabold tracking-tight text-slate-800">EGEO - TA</h1>            
+            </div>                        
+            <div class="flex items-center gap-3">                
+                <div class="flex items-center gap-4 bg-slate-100 px-4 py-2 rounded-xl">                    
+                    <button onclick="changeWeek(-1)" class="font-bold text-slate-400 hover:text-slate-900">◀</button>                    
+                    <span id="week-label" class="text-[11px] font-bold uppercase tracking-tighter font-mono"></span>                    
+                    <button onclick="changeWeek(1)" class="font-bold text-slate-400 hover:text-slate-900">▶</button>                
+                </div>                
+                <button onclick="loadData()" class="bg-slate-800 text-white px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-slate-700">↻</button>            
+            </div>        
+        </div>    
     </header>
 
     <main id="board" class="board-wrapper"></main>
 
-    <div id="modal" class="fixed inset-0 bg-slate-900/40 hidden z-[3000] items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl">
-            <h2 id="modal-title" class="text-xl font-bold mb-6">Novo Registo</h2>
-            <div class="space-y-4">
-                <div class="flex gap-3">
-                    <div class="flex-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Trator</label>
-                        <select id="m-trator" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none"></select>
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Reboque</label>
-                        <select id="m-reboque" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none"></select>
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Descrição</label>
-                    <input type="text" id="m-servico" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">NEI</label>
-                    <input type="text" id="m-nei" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono outline-none focus:border-blue-500">
-                </div>
-                <div class="flex gap-4 pt-4">
-                    <button onclick="closeModal()" class="flex-1 text-sm font-bold text-slate-400">Cancelar</button>
-                    <button id="btn-save" class="flex-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition">Gravar Dados</button>
-                </div>
-            </div>
-        </div>
+    <div id="modal" class="fixed inset-0 bg-slate-900/40 hidden z-[3000] items-center justify-center p-4">        
+        <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl">            
+            <h2 id="modal-title" class="text-xl font-bold mb-6">Novo Registo</h2>            
+            
+            <div class="space-y-4">                
+                <div class="flex gap-3">                    
+                    <div class="flex-1">                        
+                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Trator</label>                        
+                        <select id="m-trator" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none"></select>                    
+                    </div>                    
+                    <div class="flex-1">                        
+                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Reboque</label>                        
+                        <select id="m-reboque" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none"></select>                    
+                    </div>                
+                </div>                
+                
+                <div>                    
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Descrição</label>                    
+                    <input type="text" id="m-servico" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-500">                
+                </div>                
+                
+                <div>                    
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">NEI</label>                    
+                    <input type="text" id="m-nei" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono outline-none focus:border-blue-500">                
+                </div>                
+                
+                <div class="flex gap-4 pt-4">                    
+                    <button onclick="closeModal()" class="flex-1 text-sm font-bold text-slate-400">Cancelar</button>                    
+                    <button id="btn-save" class="flex-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition">Gravar Dados</button>                
+                </div>            
+            </div>        
+        </div>    
     </div>
 
-    <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvZ6RDtubzNKAbm0MqyJLVLq6E6x1CdZBtoNhl9OTf3FKImo3lPGdHpSfMoKdr0l-2/exec';
-        let currentMonday = getMonday(new Date());
-        let appData = { motoristas: [], tratores: [], reboques: [], historico: [] };
+    <script>        
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvZ6RDtubzNKAbm0MqyJLVLq6E6x1CdZBtoNhl9OTf3FKImo3lPGdHpSfMoKdr0l-2/exec';        
         
-        const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        let currentMonday = getMonday(new Date());        
+        let appData = { motoristas: [], tratores: [], reboques: [], historico: [] };                
+        
+        const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];        
         const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-        function getMonday(d) {
-            d = new Date(d); let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
+        // Calcula a segunda-feira da semana corrente
+        function getMonday(d) {            
+            d = new Date(d); 
+            let day = d.getDay();
+            let diff = d.getDate() - day + (day == 0 ? -6 : 1);            
+            return new Date(d.setDate(diff));        
         }
 
-        async function loadData() {
-            document.getElementById('loader').classList.remove('hidden');
-            try {
-                const resp = await fetch(SCRIPT_URL);
-                appData = await resp.json();
-                render();
-            } catch (e) { console.error(e); }
-            document.getElementById('loader').classList.add('hidden');
+        // Procura os dados no Google Apps Script
+        async function loadData() {            
+            document.getElementById('loader').classList.remove('hidden');            
+            try {                
+                const resp = await fetch(SCRIPT_URL);                
+                appData = await resp.json();                
+                render();            
+            } catch (e) { 
+                console.error("Erro ao carregar dados do servidor:", e); 
+                alert("Não foi possível carregar os dados. Verifique a ligação.");
+            }            
+            document.getElementById('loader').classList.add('hidden');        
         }
 
-        function render() {
-            const board = document.getElementById('board');
-            board.innerHTML = '';
+        // Renderiza o tabuleiro com os motoristas e dias da semana
+        function render() {            
+            const board = document.getElementById('board');            
+            board.innerHTML = '';                        
             
-            const formatDate = (date) => `${date.getDate()}/${months[date.getMonth()]}`;
-            document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(new Date(new Date(currentMonday).setDate(currentMonday.getDate() + 6)))}`;
+            const formatDate = (date) => `${date.getDate()}/${months[date.getMonth()]}`;            
+            
+            const fimSemana = new Date(currentMonday);
+            fimSemana.setDate(currentMonday.getDate() + 6);
+            document.getElementById('week-label').innerText = `${formatDate(currentMonday)} — ${formatDate(fimSemana)}`;
 
-            appData.motoristas.forEach(mot => {
-                const col = document.createElement('div');
-                col.className = "driver-column";
+            appData.motoristas.forEach(mot => {                
+                const col = document.createElement('div');                
+                col.className = "driver-column";                                
                 
-                let html = `<div class="driver-header">${mot}</div>`;
+                let html = `<div class="driver-header">${mot}</div>`;                                
                 
-                for(let i=0; i<7; i++) {
-                    const d = new Date(currentMonday); d.setDate(d.getDate() + i);
-                    const ds = formatDate(d);
-                    const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();
+                for(let i = 0; i < 7; i++) {                    
+                    const d = new Date(currentMonday); 
+                    d.setDate(d.getDate() + i);                    
                     
-                    const rowClass = isToday ? 'bg-today' : (i % 2 === 0 ? 'bg-normal' : 'bg-alt');
-                    const services = appData.historico.filter(h => h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds);
+                    const ds = formatDate(d);                    
+                    const isToday = new Date().toLocaleDateString() === d.toLocaleDateString();                                        
+                    
+                    // Filtragem de serviços para este condutor neste dia
+                    const services = appData.historico.filter(h => 
+                        h.motorista.trim().toLowerCase() === mot.trim().toLowerCase() && h.data === ds
+                    );
+                    
+                    // Validação de regras de cores (Feriado ou Férias)
+                    const temFeriado = services.some(s => s.servico.trim().toLowerCase().includes('feriado'));                    
+                    const temFerias = services.some(s => s.servico.trim().toLowerCase().includes('férias') || s.servico.trim().toLowerCase().includes('ferias'));                    
+                    
+                    // Definição da classe CSS da célula
+                    let rowClass = isToday ? 'bg-today' : (i % 2 === 0 ? 'bg-normal' : 'bg-alt');                    
+                    if (temFeriado) {                        
+                        rowClass = 'bg-feriado';                    
+                    } else if (temFerias) {                        
+                        rowClass = 'bg-ferias';                    
+                    }
 
-                    html += `
-                        <div class="day-cell ${rowClass}" id="day-${i}-${mot.replace(/\s+/g, '')}">
-                            <div class="flex justify-between items-center mb-3">
-                                <div>
-                                    <div class="text-[9px] font-bold uppercase tracking-wider ${isToday ? 'text-blue-500' : 'text-slate-400'}">${weekDays[d.getDay()]}</div>
-                                    <div class="text-2xl font-bold ${isToday ? 'text-blue-600' : 'text-slate-700'}">${ds}</div>
-                                </div>
-                                <button onclick="openModal('${mot}', '${ds}')" class="btn-plus">＋</button>
-                            </div>
-                            <div class="space-y-2">
-                                ${services.map(s => `
-                                    <div class="service-bubble group">
-                                        <div class="flex justify-between mb-1">
-                                            <span class="text-[10px] font-bold text-blue-500 uppercase">${s.viatura || ''}</span>
-                                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                                <button onclick='openEdit(${JSON.stringify(s)})' class="text-[10px]">✏️</button>
-                                                <button onclick="deleteRow(${s.id})" class="text-[10px]">❌</button>
-                                            </div>
-                                        </div>
-                                        <div class="text-sm font-semibold text-slate-600 leading-snug">${s.servico}</div>
-                                        ${s.nei && s.nei !== '---' ? `<div class="mt-2 text-[10px] font-mono text-slate-400"> ${s.nei}</div>` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                }
-                col.innerHTML = html;
-                board.appendChild(col);
-            });
-            setTimeout(equalizeHeights, 50);
-        }
-
-        function equalizeHeights() {
-            for (let i = 0; i < 7; i++) {
-                let maxHeight = 0;
-                const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);
-                dayCells.forEach(cell => {
-                    cell.style.height = 'auto';
-                    if (cell.offsetHeight > maxHeight) maxHeight = cell.offsetHeight;
-                });
-                dayCells.forEach(cell => cell.style.height = maxHeight + 'px');
-            }
+                    html += `                        
+                        <div class="day-cell ${rowClass}" id="day-${i}-${mot.replace(/\s+/g, '')}">                            
+                            <div class="flex justify-between items-center mb-3">                                
+                                <div>                                    
+                                    <div class="text-[9px] font-bold uppercase tracking-wider ${isToday ? 'text-blue-500' : 'text-slate-400'}">
+                                        ${weekDays[d.getDay()]}
+                                    </div>                                    
+                                    <div class="text-2xl font-bold ${isToday ? 'text-blue-600' : 'text-slate-700'}">
+                                        ${ds}
+                                    </div>                                
+                                </div>                                
+                                <button onclick="openModal('${mot}', '${ds}')" class="btn-plus">＋</button>                            
+                            </div>                            
+                            <div class="space-y-2">                                
+                                ${services.map(s => renderServiceBubble(s)).join('')}                            
+                            </div>                        
+                        </div>`;                
+                }                
+                col.innerHTML = html;                
+                board.appendChild(col);            
+            });            
+            setTimeout(equalizeHeights, 50);        
         }
 
-        // Funções de Modal e Gravação (Permanecem iguais para manter funcionalidade)
-        let activeEditData = {};
-        function openModal(mot, ds) {
-            activeEditData = { motorista: mot, data: ds, action: 'add' };
-            resetModalFields();
-            document.getElementById('modal-title').innerText = "Novo Registo";
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
+        // Função isolada para desenhar cada caixa de serviço individual (Melhor Legibilidade)
+        function renderServiceBubble(s) {
+            const viaturaHtml = s.viatura ? `<span class="text-[10px] font-bold text-blue-500 uppercase">${s.viatura}</span>` : '<span></span>';
+            const neiHtml = (s.nei && s.nei !== '---') ? `<div class="mt-2 text-[10px] font-mono text-slate-400"> ${s.nei}</div>` : '';
+            const stringifiedService = JSON.stringify(s).replace(/'/g, "&apos;");
+
+            return `
+                <div class="service-bubble group">                                        
+                    <div class="flex justify-between mb-1">                                            
+                        ${viaturaHtml}                                            
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">                                                
+                            <button onclick='openEdit(${stringifiedService})' class="text-[10px]">✏️</button>                                                
+                            <button onclick="deleteRow(${s.id})" class="text-[10px]">❌</button>                                            
+                        </div>                                        
+                    </div>                                        
+                    <div class="text-sm font-semibold text-slate-600 leading-snug">${s.servico}</div>                                        
+                    ${neiHtml}                                    
+                </div>`;
         }
-        function openEdit(s) {
-            activeEditData = { ...s, action: 'edit' };
-            resetModalFields();
-            document.getElementById('modal-title').innerText = "Editar Registo";
-            if(s.viatura.includes(' / ')) {
-                const parts = s.viatura.split(' / ');
-                document.getElementById('m-trator').value = parts[0].trim();
-                document.getElementById('m-reboque').value = parts[1].trim();
-            }
-            document.getElementById('m-servico').value = s.servico;
-            document.getElementById('m-nei').value = s.nei === "---" ? "" : s.nei;
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
+
+        // Equaliza as alturas das linhas correspondentes entre colunas diferentes
+        function equalizeHeights() {            
+            for (let i = 0; i < 7; i++) {                
+                let maxHeight = 0;                
+                const dayCells = document.querySelectorAll(`[id^="day-${i}-"]`);                
+                
+                dayCells.forEach(cell => {                    
+                    cell.style.height = 'auto';                    
+                    if (cell.offsetHeight > maxHeight) {
+                        maxHeight = cell.offsetHeight;                
+                    }
+                });                
+                dayCells.forEach(cell => cell.style.height = maxHeight + 'px');            
+            }        
         }
-        function resetModalFields() {
-            document.getElementById('m-trator').innerHTML = '<option value="">Viatura</option>' + appData.tratores.map(v => `<option value="${v}">${v}</option>`).join('');
-            document.getElementById('m-reboque').innerHTML = '<option value="">Reboque</option>' + appData.reboques.map(v => `<option value="${v}">${v}</option>`).join('');
-            document.getElementById('m-servico').value = "";
-            document.getElementById('m-nei').value = "";
-            document.getElementById('btn-save').onclick = () => save();
-        }
-        async function save() {
-            const payload = {
-                action: activeEditData.action,
-                id: activeEditData.id || null,
-                motorista: activeEditData.motorista,
-                data: activeEditData.data,
-                viatura: document.getElementById('m-trator').value + " / " + document.getElementById('m-reboque').value,
-                servico: document.getElementById('m-servico').value,
-                nei: document.getElementById('m-nei').value || "---"
-            };
-            document.getElementById('loader').classList.remove('hidden');
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            closeModal();
-            loadData();
-        }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
-        function changeWeek(dir) { currentMonday.setDate(currentMonday.getDate() + (dir*7)); render(); }
-        async function deleteRow(id) { if(confirm("Eliminar registo?")) { document.getElementById('loader').classList.remove('hidden'); await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', id: id}) }); loadData(); } }
-        loadData();
+
+        let activeEditData = {};        
+
+        // Gestão de estado do Modal
+        function openModal(mot, ds) {            
+            activeEditData = { motorista: mot, data: ds, action: 'add' };            
+            resetModalFields();            
+            document.getElementById('modal-title').innerText = "Novo Registo";            
+            document.getElementById('modal').classList.remove('hidden');            
+            document.getElementById('modal').classList.add('flex');        
+        }        
+
+        function openEdit(s) {            
+            activeEditData = { ...s, action: 'edit' };            
+            resetModalFields();            
+            document.getElementById('modal-title').innerText = "Editar Registo";            
+            
+            if(s.viatura && s.viatura.includes(' / ')) {                
+                const parts = s.viatura.split(' / ');                
+                document.getElementById('m-trator').value = parts[0].trim();                
+                document.getElementById('m-reboque').value = parts[1].trim();            
+            }            
+            
+            document.getElementById('m-servico').value = s.servico;            
+            document.getElementById('m-nei').value = s.nei === "---" ? "" : s.nei;            
+            document.getElementById('modal').classList.remove('hidden');            
+            document.getElementById('modal').classList.add('flex');        
+        }        
+
+        function resetModalFields() {            
+            document.getElementById('m-trator').innerHTML = '<option value="">Viatura</option>' + appData.tratores.map(v => `<option value="${v}">${v}</option>`).join('');            
+            document.getElementById('m-reboque').innerHTML = '<option value="">Reboque</option>' + appData.reboques.map(v => `<option value="${v}">${v}</option>`).join('');            
+            document.getElementById('m-servico').value = "";            
+            document.getElementById('m-nei').value = "";            
+            document.getElementById('btn-save').onclick = () => save();        
+        }        
+
+        // Comunicação de gravação/edição com a API do Apps Script
+        async function save() {            
+            const payload = {                
+                action: activeEditData.action,                
+                id: activeEditData.id || null,                
+                motorista: activeEditData.motorista,                
+                data: activeEditData.data,                
+                viatura: document.getElementById('m-trator').value + " / " + document.getElementById('m-reboque').value,                
+                servico: document.getElementById('m-servico').value,                
+                nei: document.getElementById('m-nei').value || "---"            
+            };            
+            
+            document.getElementById('loader').classList.remove('hidden');            
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });            
+            closeModal();            
+            loadData();        
+        }        
+
+        function closeModal() { 
+            document.getElementById('modal').classList.add('hidden'); 
+            document.getElementById('modal').classList.remove('flex'); 
+        }        
+        
+        function changeWeek(dir) { 
+            currentMonday.setDate(currentMonday.getDate() + (dir * 7)); 
+            render(); 
+        }        
+
+        async function deleteRow(id) { 
+            if(confirm("Eliminar este registo definitivamente?")) { 
+                document.getElementById('loader').classList.remove('hidden'); 
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'delete', id: id }) 
+                }); 
+                loadData(); 
+            } 
+        }        
+        
+        // Inicialização da aplicação
+        loadData();    
     </script>
 </body>
 </html>
