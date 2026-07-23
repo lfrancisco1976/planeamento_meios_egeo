@@ -24,6 +24,7 @@
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
             padding-bottom: 2rem;
             -webkit-overflow-scrolling: touch;
         }
@@ -32,6 +33,7 @@
             min-width: 420px;
             flex: 1 0 auto;
             scroll-snap-align: start;
+            scroll-snap-stop: always;
             padding: 0 0.75rem;
         }
 
@@ -53,10 +55,10 @@
             border: 1px solid #e2e8f0;
             border-bottom: none;
             position: sticky;
-            top: 0;
+            top: var(--driver-header-offset, 88px);
             z-index: 40;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, top 0.15s ease;
         }
 
         .day-card {
@@ -400,7 +402,17 @@
 
         window.changeWeek = function(dir) { currentMonday.setDate(currentMonday.getDate() + (dir * 7)); render(); }
         window.goToday = function() { currentMonday = getMonday(new Date()); render(); }
-        window.addEventListener('resize', equalizeHeights);
+
+        // Keeps the driver-name header sticky right below the site header (not hidden behind it)
+        function updateStickyOffset() {
+            const siteHeader = document.querySelector('body > header');
+            if (siteHeader) {
+                document.documentElement.style.setProperty('--driver-header-offset', siteHeader.offsetHeight + 'px');
+            }
+        }
+
+        window.addEventListener('resize', () => { equalizeHeights(); updateStickyOffset(); });
+        updateStickyOffset();
         loadData();
     </script>
 </body>
